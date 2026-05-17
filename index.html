@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Flower Bouquet</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{min-height:100vh;background:radial-gradient(ellipse at 50% 60%,#1a0a2e 0%,#0a1628 45%,#0d1a10 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',Georgia,serif;overflow:hidden;position:relative;}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.star{position:absolute;border-radius:50%;background:white;animation:twinkle var(--d,3s) ease-in-out infinite var(--delay,0s);}
+@keyframes twinkle{0%,100%{opacity:0.1;transform:scale(1);}50%{opacity:0.8;transform:scale(1.4);}}
+.scene{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;}
+.petal-fall{position:fixed;width:10px;height:14px;border-radius:50% 0 50% 0;opacity:0;pointer-events:none;z-index:10;
+  animation:petalDrift var(--pd,8s) ease-in infinite var(--pdelay,0s);}
+@keyframes petalDrift{0%{opacity:0;transform:translateY(-20px) rotate(0deg);top:-5%;}10%{opacity:0.7;}90%{opacity:0.3;}100%{opacity:0;transform:translateY(100vh) rotate(720deg);}}
+canvas{display:block;border-radius:16px;cursor:default;
+  filter:drop-shadow(0 0 60px rgba(220,60,100,0.18)) drop-shadow(0 20px 60px rgba(0,0,0,0.8));}
+.choose-text{margin-top:18px;font-size:28px;font-style:italic;letter-spacing:0.22em;color:#f5deb3;text-transform:lowercase;opacity:0;
+  animation:fadeRise 1.2s ease 3.8s forwards;text-shadow:0 0 30px rgba(245,200,80,0.6),0 2px 12px rgba(0,0,0,0.9);}
+.ornament{display:flex;align-items:center;gap:12px;opacity:0;animation:fadeRise 1.2s ease 4.1s forwards;margin-top:6px;}
+.ornament-line{width:100px;height:1px;background:linear-gradient(90deg,transparent,#c8a44a 50%,transparent);}
+.ornament-diamond{width:6px;height:6px;background:#c8a44a;transform:rotate(45deg);}
+@keyframes fadeRise{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* ===== TEACHER PAGE OVERLAY ===== */
+#teacherPage{
+  position:fixed;inset:0;z-index:100;
+  background:linear-gradient(135deg,#0d0520 0%,#1a0a3a 30%,#0a1f10 70%,#050d20 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  overflow-y:auto;overflow-x:hidden;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.8s ease;
+  padding:40px 20px 60px;
+}
+#teacherPage.visible{opacity:1;pointer-events:all;}
+
+/* Animated aurora background */
+.aurora{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.aurora-band{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.18;animation:auroraDrift 12s ease-in-out infinite;}
+.aurora-band:nth-child(1){width:700px;height:400px;background:radial-gradient(ellipse,#e91e7a,transparent);top:-10%;left:-10%;animation-delay:0s;}
+.aurora-band:nth-child(2){width:600px;height:350px;background:radial-gradient(ellipse,#7c4dff,transparent);top:20%;right:-15%;animation-delay:3s;}
+.aurora-band:nth-child(3){width:800px;height:300px;background:radial-gradient(ellipse,#00bcd4,transparent);bottom:10%;left:5%;animation-delay:6s;}
+@keyframes auroraDrift{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(30px,20px) scale(1.08);}}
+
+/* Falling hibiscus petals on teacher page */
+.hib-petal{position:fixed;pointer-events:none;z-index:1;opacity:0;
+  animation:hibDrift var(--hd,9s) ease-in infinite var(--hdel,0s);}
+@keyframes hibDrift{0%{opacity:0;transform:translateY(-30px) rotate(0deg) scale(0.8);top:-5%;}
+  15%{opacity:0.8;}85%{opacity:0.4;}100%{opacity:0;transform:translateY(105vh) rotate(540deg) scale(1.2);}}
+
+.teacher-content{position:relative;z-index:2;width:100%;max-width:900px;display:flex;flex-direction:column;align-items:center;gap:0;}
+
+/* Back button */
+.back-btn{position:fixed;top:22px;left:24px;z-index:200;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,150,200,0.35);
+  color:#ffb3d0;font-family:'Cormorant Garamond',serif;font-size:15px;letter-spacing:0.12em;
+  padding:8px 20px;border-radius:30px;cursor:pointer;backdrop-filter:blur(8px);
+  transition:all 0.3s ease;}
+.back-btn:hover{background:rgba(233,30,122,0.2);border-color:#e91e7a;color:#fff;}
+
+/* Header hibiscus decoration */
+.header-hibiscus{opacity:0;transform:scale(0);animation:popIn 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.3s forwards;}
+@keyframes popIn{to{opacity:1;transform:scale(1);}}
+
+/* Headline */
+.headline-wrap{text-align:center;margin-top:10px;opacity:0;animation:slideDown 0.9s ease 0.6s forwards;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-30px);}to{opacity:1;transform:translateY(0);}}
+.headline-sub{font-family:'Playfair Display',serif;font-size:15px;letter-spacing:0.4em;
+  color:#e91e7a;text-transform:uppercase;font-style:italic;margin-bottom:10px;}
+.headline-main{font-family:'Playfair Display',serif;font-size:clamp(32px,6vw,62px);
+  font-weight:700;color:#fff;line-height:1.1;text-shadow:0 0 40px rgba(233,30,122,0.5),0 4px 20px rgba(0,0,0,0.8);}
+.headline-main span{color:#ff80ab;}
+.headline-divider{display:flex;align-items:center;gap:14px;margin:14px 0 0;justify-content:center;}
+.hdiv-line{width:80px;height:1px;background:linear-gradient(90deg,transparent,#e91e7a);}
+.hdiv-line.rev{background:linear-gradient(90deg,#e91e7a,transparent);}
+.hdiv-flower{font-size:22px;animation:spinSlow 8s linear infinite;}
+@keyframes spinSlow{to{transform:rotate(360deg);}}
+
+/* Photos section */
+.photos-section{width:100%;margin-top:38px;opacity:0;animation:fadeUp 0.9s ease 1.0s forwards;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(40px);}to{opacity:1;transform:translateY(0);}}
+
+/* Large central photo */
+.photo-center-wrap{display:flex;justify-content:center;margin-bottom:28px;}
+.photo-large{position:relative;width:280px;height:320px;}
+.photo-large .photo-frame{
+  width:100%;height:100%;border-radius:18px;overflow:hidden;
+  border:3px solid rgba(233,30,122,0.5);
+  box-shadow:0 0 40px rgba(233,30,122,0.3),0 20px 60px rgba(0,0,0,0.7),inset 0 0 30px rgba(233,30,122,0.08);
+  animation:framePulse 4s ease-in-out infinite;}
+@keyframes framePulse{0%,100%{box-shadow:0 0 40px rgba(233,30,122,0.3),0 20px 60px rgba(0,0,0,0.7);}
+  50%{box-shadow:0 0 70px rgba(233,30,122,0.5),0 20px 60px rgba(0,0,0,0.7);}}
+.photo-large .photo-frame img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-badge{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#e91e7a,#c2185b);color:#fff;
+  font-family:'Playfair Display',serif;font-size:11px;letter-spacing:0.15em;
+  padding:5px 18px;border-radius:20px;white-space:nowrap;
+  box-shadow:0 4px 18px rgba(233,30,122,0.5);text-transform:uppercase;}
+.photo-corner{position:absolute;width:22px;height:22px;border-color:#e91e7a;border-style:solid;opacity:0.7;}
+.photo-corner.tl{top:-6px;left:-6px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+.photo-corner.tr{top:-6px;right:-6px;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
+.photo-corner.bl{bottom:-6px;left:-6px;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
+.photo-corner.br{bottom:-6px;right:-6px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+
+/* Pair of photos */
+.photo-pair{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;}
+.photo-small{position:relative;width:210px;height:240px;}
+.photo-small .photo-frame{
+  width:100%;height:100%;border-radius:14px;overflow:hidden;
+  border:2.5px solid rgba(255,180,220,0.4);
+  box-shadow:0 0 24px rgba(233,30,122,0.2),0 12px 40px rgba(0,0,0,0.6);}
+.photo-small .photo-frame img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-small:nth-child(1){animation:tiltLeft 6s ease-in-out infinite;}
+.photo-small:nth-child(2){animation:tiltRight 6s ease-in-out infinite;}
+@keyframes tiltLeft{0%,100%{transform:rotate(-1.5deg);}50%{transform:rotate(0.5deg);}}
+@keyframes tiltRight{0%,100%{transform:rotate(1.5deg);}50%{transform:rotate(-0.5deg);}}
+.photo-label{position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);
+  background:rgba(10,5,25,0.85);border:1px solid rgba(233,30,122,0.35);
+  color:#ffb3d0;font-size:11px;letter-spacing:0.12em;padding:4px 14px;border-radius:14px;
+  white-space:nowrap;backdrop-filter:blur(6px);}
+
+/* Special note */
+.note-section{width:100%;max-width:700px;margin-top:50px;
+  opacity:0;animation:fadeUp 0.9s ease 1.4s forwards;}
+.note-card{
+  position:relative;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(233,30,122,0.25);border-radius:20px;
+  padding:40px 44px;backdrop-filter:blur(12px);
+  box-shadow:0 8px 40px rgba(0,0,0,0.4),inset 0 0 60px rgba(233,30,122,0.04);}
+.note-card::before{content:'';position:absolute;inset:0;border-radius:20px;
+  background:linear-gradient(135deg,rgba(233,30,122,0.06),transparent 50%,rgba(124,77,255,0.04));pointer-events:none;}
+.note-quote-mark{font-family:'Playfair Display',serif;font-size:90px;line-height:0.6;
+  color:#e91e7a;opacity:0.25;position:absolute;top:20px;left:24px;pointer-events:none;user-select:none;}
+.note-quote-mark.close{top:auto;bottom:10px;right:24px;left:auto;}
+.note-text{font-family:'Playfair Display',serif;font-size:clamp(15px,2.2vw,19px);
+  line-height:1.85;color:#f0dfe8;text-align:center;font-style:italic;
+  position:relative;z-index:1;}
+.note-text strong{color:#ff80ab;font-style:normal;font-weight:600;}
+.note-signature{margin-top:24px;text-align:right;position:relative;z-index:1;}
+.note-signature-line{width:80px;height:1px;background:linear-gradient(90deg,transparent,#e91e7a);
+  display:inline-block;vertical-align:middle;margin-right:10px;}
+.note-signature span{color:#e91e7a;font-size:14px;letter-spacing:0.15em;text-transform:uppercase;}
+
+/* Floating hearts */
+.heart{position:fixed;pointer-events:none;font-size:var(--hs,18px);opacity:0;
+  animation:heartRise var(--hrd,7s) ease-in infinite var(--hrdel,0s);z-index:1;}
+@keyframes heartRise{0%{opacity:0;transform:translateY(0) scale(0.5);}20%{opacity:0.6;}
+  80%{opacity:0.2;}100%{opacity:0;transform:translateY(-80vh) scale(1.2) rotate(20deg);}}
+
+/* Shimmer on card */
+.note-card::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent);
+  animation:shimmer 5s ease-in-out infinite;border-radius:20px;}
+@keyframes shimmer{0%{left:-100%;}100%{left:200%;}}
+
+/* ===== DAUGHTER / SUNFLOWER PAGE ===== */
+#daughterPage{
+  position:fixed;inset:0;z-index:100;
+  background:linear-gradient(135deg,#0d0a00 0%,#1a1200 25%,#2a1a00 50%,#0a0d00 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  overflow-y:auto;overflow-x:hidden;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.8s ease;
+  padding:40px 20px 60px;
+}
+#daughterPage.visible{opacity:1;pointer-events:all;}
+
+/* Sunburst aurora for daughter page */
+.sun-aurora{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.sun-band{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.20;animation:sunDrift 10s ease-in-out infinite;}
+.sun-band:nth-child(1){width:750px;height:500px;background:radial-gradient(ellipse,#ffc107,transparent);top:-15%;left:-15%;animation-delay:0s;}
+.sun-band:nth-child(2){width:600px;height:400px;background:radial-gradient(ellipse,#ff8f00,transparent);top:10%;right:-20%;animation-delay:2.5s;}
+.sun-band:nth-child(3){width:700px;height:350px;background:radial-gradient(ellipse,#ffeb3b,transparent);bottom:5%;left:10%;animation-delay:5s;}
+.sun-band:nth-child(4){width:400px;height:400px;background:radial-gradient(ellipse,#fff176,transparent);bottom:20%;right:5%;animation-delay:7s;}
+@keyframes sunDrift{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(25px,15px) scale(1.1);}}
+
+/* Sunray lines spinning */
+.sunrays{position:fixed;top:50%;left:50%;width:0;height:0;pointer-events:none;z-index:0;
+  animation:raySpin 40s linear infinite;}
+@keyframes raySpin{to{transform:rotate(360deg);}}
+.sunray{position:absolute;width:2px;height:400px;background:linear-gradient(to bottom,rgba(255,200,0,0.06),transparent);
+  transform-origin:center top;top:0;left:-1px;}
+
+/* Floating sunflower petals */
+.sun-petal{position:fixed;pointer-events:none;z-index:1;opacity:0;
+  animation:sunPetalDrift var(--spd,10s) ease-in infinite var(--spdel,0s);}
+@keyframes sunPetalDrift{0%{opacity:0;transform:translateY(-40px) rotate(0deg) scale(0.7);top:-8%;}
+  15%{opacity:0.9;}85%{opacity:0.3;}100%{opacity:0;transform:translateY(110vh) rotate(600deg) scale(1.3);}}
+
+/* Floating sparkles */
+.sparkle{position:fixed;pointer-events:none;z-index:1;font-size:var(--spks,16px);opacity:0;
+  animation:sparkleRise var(--spkd,8s) ease-in infinite var(--spkdel,0s);}
+@keyframes sparkleRise{0%{opacity:0;transform:translateY(0) scale(0.3) rotate(0deg);}
+  20%{opacity:1;}80%{opacity:0.3;}100%{opacity:0;transform:translateY(-90vh) scale(1.4) rotate(360deg);}}
+
+.daughter-content{position:relative;z-index:2;width:100%;max-width:900px;display:flex;flex-direction:column;align-items:center;gap:0;}
+
+/* Back button — golden theme */
+.back-btn-sun{position:fixed;top:22px;left:24px;z-index:200;
+  background:rgba(255,200,0,0.08);border:1px solid rgba(255,200,0,0.35);
+  color:#ffe082;font-family:'Cormorant Garamond',serif;font-size:15px;letter-spacing:0.12em;
+  padding:8px 20px;border-radius:30px;cursor:pointer;backdrop-filter:blur(8px);
+  transition:all 0.3s ease;}
+.back-btn-sun:hover{background:rgba(255,193,7,0.22);border-color:#ffc107;color:#fff;}
+
+/* Sunflower SVG header */
+.header-sunflower{opacity:0;transform:scale(0) rotate(-20deg);
+  animation:sunPop 1s cubic-bezier(0.34,1.56,0.64,1) 0.2s forwards;}
+@keyframes sunPop{to{opacity:1;transform:scale(1) rotate(0deg);}}
+
+/* Glowing headline */
+.d-headline-wrap{text-align:center;margin-top:12px;opacity:0;animation:slideDown 0.9s ease 0.65s forwards;}
+.d-headline-sub{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:0.45em;
+  color:#ffc107;text-transform:uppercase;font-style:italic;margin-bottom:10px;}
+.d-headline-main{font-family:'Playfair Display',serif;font-size:clamp(30px,6vw,60px);
+  font-weight:700;color:#fff;line-height:1.1;
+  text-shadow:0 0 50px rgba(255,193,7,0.7),0 0 100px rgba(255,152,0,0.3),0 4px 20px rgba(0,0,0,0.9);}
+.d-headline-main span{
+  color:#ffd740;
+  text-shadow:0 0 30px rgba(255,215,64,0.9),0 0 60px rgba(255,193,7,0.5);}
+.d-headline-divider{display:flex;align-items:center;gap:14px;margin:14px 0 0;justify-content:center;}
+.d-hdiv-line{width:80px;height:1px;background:linear-gradient(90deg,transparent,#ffc107);}
+.d-hdiv-line.rev{background:linear-gradient(90deg,#ffc107,transparent);}
+.d-hdiv-icon{font-size:24px;animation:sunSpin 12s linear infinite;}
+@keyframes sunSpin{to{transform:rotate(360deg);}}
+
+/* Photos section — golden frames */
+.d-photos-section{width:100%;margin-top:38px;opacity:0;animation:fadeUp 0.9s ease 1.05s forwards;}
+
+.d-photo-center-wrap{display:flex;justify-content:center;margin-bottom:32px;}
+.d-photo-large{position:relative;width:280px;height:320px;}
+.d-photo-large .d-photo-frame{
+  width:100%;height:100%;border-radius:50% 50% 45% 45% / 40% 40% 60% 60%;
+  overflow:hidden;
+  border:3px solid rgba(255,193,7,0.6);
+  box-shadow:0 0 0 6px rgba(255,193,7,0.08),0 0 50px rgba(255,193,7,0.4),0 20px 60px rgba(0,0,0,0.7);
+  animation:dFramePulse 3.5s ease-in-out infinite;}
+@keyframes dFramePulse{0%,100%{box-shadow:0 0 0 6px rgba(255,193,7,0.08),0 0 50px rgba(255,193,7,0.35),0 20px 60px rgba(0,0,0,0.7);}
+  50%{box-shadow:0 0 0 10px rgba(255,193,7,0.12),0 0 80px rgba(255,193,7,0.6),0 20px 60px rgba(0,0,0,0.7);}}
+.d-photo-large .d-photo-frame img{width:100%;height:100%;object-fit:cover;display:block;}
+.d-photo-badge{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#f9a825,#ff8f00);color:#fff;
+  font-family:'Playfair Display',serif;font-size:11px;letter-spacing:0.15em;
+  padding:6px 20px;border-radius:20px;white-space:nowrap;
+  box-shadow:0 4px 20px rgba(255,152,0,0.6);text-transform:uppercase;}
+/* Rotating ring around center photo */
+.d-ring{position:absolute;inset:-14px;border-radius:50%;
+  border:2px dashed rgba(255,193,7,0.35);
+  animation:ringRotate 20s linear infinite;}
+@keyframes ringRotate{to{transform:rotate(360deg);}}
+.d-ring::before,.d-ring::after{content:'✦';position:absolute;color:#ffd740;font-size:12px;}
+.d-ring::before{top:-7px;left:50%;transform:translateX(-50%);}
+.d-ring::after{bottom:-7px;left:50%;transform:translateX(-50%);}
+
+/* Corner brackets — golden */
+.d-corner{position:absolute;width:24px;height:24px;border-color:#ffc107;border-style:solid;opacity:0.8;}
+.d-corner.tl{top:-8px;left:-8px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+.d-corner.tr{top:-8px;right:-8px;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
+.d-corner.bl{bottom:-8px;left:-8px;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
+.d-corner.br{bottom:-8px;right:-8px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+
+.d-photo-pair{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;}
+.d-photo-small{position:relative;width:210px;height:245px;}
+.d-photo-small .d-photo-frame{
+  width:100%;height:100%;border-radius:16px;overflow:hidden;
+  border:2.5px solid rgba(255,193,7,0.45);
+  box-shadow:0 0 28px rgba(255,193,7,0.22),0 12px 40px rgba(0,0,0,0.6);}
+.d-photo-small .d-photo-frame img{width:100%;height:100%;object-fit:cover;display:block;}
+.d-photo-small:nth-child(1){animation:dTiltL 7s ease-in-out infinite;}
+.d-photo-small:nth-child(2){animation:dTiltR 7s ease-in-out infinite;}
+@keyframes dTiltL{0%,100%{transform:rotate(-2deg) translateY(0);}50%{transform:rotate(0.8deg) translateY(-4px);}}
+@keyframes dTiltR{0%,100%{transform:rotate(2deg) translateY(0);}50%{transform:rotate(-0.8deg) translateY(-4px);}}
+.d-photo-label{position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);
+  background:rgba(10,8,0,0.88);border:1px solid rgba(255,193,7,0.4);
+  color:#ffe082;font-size:11px;letter-spacing:0.12em;padding:4px 14px;border-radius:14px;
+  white-space:nowrap;backdrop-filter:blur(6px);}
+
+/* Special note — golden */
+.d-note-section{width:100%;max-width:700px;margin-top:52px;
+  opacity:0;animation:fadeUp 0.9s ease 1.45s forwards;}
+.d-note-card{
+  position:relative;
+  background:linear-gradient(135deg,rgba(255,193,7,0.05),rgba(255,152,0,0.03),rgba(0,0,0,0));
+  border:1px solid rgba(255,193,7,0.28);border-radius:22px;
+  padding:42px 46px;backdrop-filter:blur(14px);
+  box-shadow:0 8px 50px rgba(0,0,0,0.5),0 0 80px rgba(255,193,7,0.06),inset 0 0 60px rgba(255,193,7,0.03);}
+.d-note-card::before{content:'';position:absolute;inset:0;border-radius:22px;
+  background:linear-gradient(135deg,rgba(255,193,7,0.07),transparent 50%,rgba(255,152,0,0.04));pointer-events:none;}
+.d-note-card::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,220,50,0.05),transparent);
+  animation:shimmer 6s ease-in-out infinite;border-radius:22px;}
+.d-quote-mark{font-family:'Playfair Display',serif;font-size:100px;line-height:0.55;
+  color:#ffc107;opacity:0.2;position:absolute;pointer-events:none;user-select:none;}
+.d-quote-mark.open{top:18px;left:22px;}
+.d-quote-mark.close{bottom:8px;right:22px;}
+.d-note-text{font-family:'Playfair Display',serif;font-size:clamp(15px,2.2vw,18.5px);
+  line-height:1.9;color:#fff8e1;text-align:center;font-style:italic;position:relative;z-index:1;}
+.d-note-text strong{color:#ffd740;font-style:normal;font-weight:600;}
+.d-note-signature{margin-top:26px;text-align:right;position:relative;z-index:1;}
+.d-sig-line{width:80px;height:1px;background:linear-gradient(90deg,transparent,#ffc107);
+  display:inline-block;vertical-align:middle;margin-right:10px;}
+.d-sig-text{color:#ffc107;font-size:13.5px;letter-spacing:0.15em;text-transform:uppercase;
+  font-family:'Playfair Display',serif;}
+
+/* Star burst bottom decoration */
+.d-starburst{text-align:center;margin-top:30px;opacity:0;animation:fadeUp 0.9s ease 1.8s forwards;
+  font-size:22px;letter-spacing:10px;}
+
+/* ===== ROSE / BEST LADY PAGE ===== */
+#ladyPage{
+  position:fixed;inset:0;z-index:100;
+  background:linear-gradient(145deg,#0a0008 0%,#1a0015 20%,#220020 45%,#100008 70%,#05000d 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  overflow-y:auto;overflow-x:hidden;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.9s ease;
+  padding:40px 20px 70px;
+}
+#ladyPage.visible{opacity:1;pointer-events:all;}
+
+/* Silk aurora — deep rose/crimson/violet */
+.lady-aurora{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.lady-band{position:absolute;border-radius:50%;filter:blur(100px);animation:ladyDrift 14s ease-in-out infinite;}
+.lady-band:nth-child(1){width:800px;height:500px;background:radial-gradient(ellipse,rgba(180,0,60,0.28),transparent);top:-20%;left:-15%;animation-delay:0s;}
+.lady-band:nth-child(2){width:600px;height:450px;background:radial-gradient(ellipse,rgba(120,0,100,0.22),transparent);top:15%;right:-18%;animation-delay:3s;}
+.lady-band:nth-child(3){width:700px;height:350px;background:radial-gradient(ellipse,rgba(200,20,80,0.18),transparent);bottom:5%;left:5%;animation-delay:6s;}
+.lady-band:nth-child(4){width:500px;height:500px;background:radial-gradient(ellipse,rgba(80,0,60,0.20),transparent);bottom:15%;right:0%;animation-delay:9s;}
+@keyframes ladyDrift{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(20px,15px) scale(1.09);}}
+
+/* Floating rose petals */
+.rose-petal-fall{position:fixed;pointer-events:none;z-index:1;opacity:0;
+  animation:rosePetalDrift var(--rpd,11s) ease-in infinite var(--rpdel,0s);}
+@keyframes rosePetalDrift{
+  0%{opacity:0;transform:translateY(-30px) rotate(0deg) scale(0.6);top:-6%;}
+  12%{opacity:0.85;}88%{opacity:0.25;}
+  100%{opacity:0;transform:translateY(108vh) rotate(500deg) scale(1.2);}
+}
+
+/* Floating love glitter */
+.lady-glitter{position:fixed;pointer-events:none;z-index:1;opacity:0;
+  font-size:var(--lgs,15px);
+  animation:glitterFloat var(--lgd,9s) ease-in infinite var(--lgdel,0s);}
+@keyframes glitterFloat{
+  0%{opacity:0;transform:translateY(0) scale(0.4) rotate(0deg);}
+  18%{opacity:0.9;}82%{opacity:0.2;}
+  100%{opacity:0;transform:translateY(-88vh) scale(1.3) rotate(280deg);}
+}
+
+/* Particle ring — rotating dots around the page edge */
+.lady-particle{position:fixed;border-radius:50%;pointer-events:none;z-index:1;
+  animation:particlePulse var(--pp,3s) ease-in-out infinite var(--ppdel,0s);}
+@keyframes particlePulse{0%,100%{opacity:0.1;transform:scale(0.8);}50%{opacity:0.5;transform:scale(1.2);}}
+
+.lady-content{position:relative;z-index:2;width:100%;max-width:900px;display:flex;flex-direction:column;align-items:center;}
+
+/* Back button — rose theme */
+.back-btn-rose{position:fixed;top:22px;left:24px;z-index:200;
+  background:rgba(180,0,60,0.1);border:1px solid rgba(220,80,120,0.4);
+  color:#f4a7b9;font-family:'Cormorant Garamond',serif;font-size:15px;letter-spacing:0.13em;
+  padding:8px 22px;border-radius:30px;cursor:pointer;backdrop-filter:blur(10px);
+  transition:all 0.3s ease;}
+.back-btn-rose:hover{background:rgba(200,30,80,0.25);border-color:#e91e63;color:#fff;
+  box-shadow:0 0 20px rgba(200,30,80,0.3);}
+
+/* Rose SVG header — blooms on entry */
+.header-rose-icon{opacity:0;transform:scale(0) rotate(15deg);
+  animation:rosePop 1.1s cubic-bezier(0.34,1.56,0.64,1) 0.15s forwards;}
+@keyframes rosePop{to{opacity:1;transform:scale(1) rotate(0deg);}}
+
+/* Headline */
+.l-headline-wrap{text-align:center;margin-top:10px;opacity:0;animation:slideDown 0.9s ease 0.7s forwards;}
+.l-headline-sub{font-family:'Playfair Display',serif;font-size:13.5px;letter-spacing:0.48em;
+  color:#f06292;text-transform:uppercase;font-style:italic;margin-bottom:12px;
+  text-shadow:0 0 20px rgba(240,98,146,0.5);}
+.l-headline-main{font-family:'Playfair Display',serif;font-size:clamp(30px,6vw,62px);
+  font-weight:700;color:#fff;line-height:1.1;
+  text-shadow:0 0 60px rgba(200,30,80,0.7),0 0 120px rgba(150,0,60,0.4),0 5px 25px rgba(0,0,0,0.9);}
+.l-headline-main em{
+  display:block;color:#ff80ab;font-style:normal;
+  text-shadow:0 0 40px rgba(255,128,171,0.9),0 0 80px rgba(220,30,90,0.5);}
+.l-divider{display:flex;align-items:center;gap:14px;margin:16px 0 0;justify-content:center;}
+.l-div-line{width:90px;height:1px;}
+.l-div-line.left{background:linear-gradient(90deg,transparent,#e91e63);}
+.l-div-line.right{background:linear-gradient(90deg,#e91e63,transparent);}
+.l-div-icon{font-size:26px;animation:roseIconSpin 15s linear infinite;}
+@keyframes roseIconSpin{0%,100%{transform:scale(1);}50%{transform:scale(1.15) rotate(5deg);}}
+
+/* Photos section */
+.l-photos-section{width:100%;margin-top:40px;opacity:0;animation:fadeUp 0.95s ease 1.1s forwards;}
+
+/* Large centre photo — elegant oval with glowing border */
+.l-photo-center-wrap{display:flex;justify-content:center;margin-bottom:34px;}
+.l-photo-large{position:relative;width:270px;height:330px;}
+
+/* Animated petal border ring */
+.l-petal-ring{position:absolute;inset:-18px;border-radius:50%;
+  border:1.5px dashed rgba(220,80,130,0.3);
+  animation:ringCW 25s linear infinite;}
+.l-petal-ring.inner{inset:-8px;border-color:rgba(255,128,171,0.25);
+  animation:ringCCW 18s linear infinite;}
+@keyframes ringCW{to{transform:rotate(360deg);}}
+@keyframes ringCCW{to{transform:rotate(-360deg);}}
+.l-petal-ring::before,.l-petal-ring::after{content:'🌹';position:absolute;font-size:13px;}
+.l-petal-ring::before{top:-8px;left:50%;transform:translateX(-50%);}
+.l-petal-ring::after{bottom:-8px;left:50%;transform:translateX(-50%);}
+.l-petal-ring.inner::before{content:'✦';color:#ff80ab;font-size:11px;top:-6px;}
+.l-petal-ring.inner::after{content:'✦';color:#ff80ab;font-size:11px;bottom:-6px;}
+
+.l-frame-large{
+  width:100%;height:100%;
+  border-radius:48% 52% 44% 56% / 40% 44% 56% 60%;
+  overflow:hidden;
+  border:2.5px solid rgba(220,80,130,0.55);
+  box-shadow:
+    0 0 0 6px rgba(200,30,80,0.07),
+    0 0 55px rgba(200,30,80,0.4),
+    0 0 100px rgba(150,0,60,0.2),
+    0 25px 70px rgba(0,0,0,0.75);
+  animation:ladyFramePulse 4s ease-in-out infinite;}
+@keyframes ladyFramePulse{
+  0%,100%{box-shadow:0 0 0 6px rgba(200,30,80,0.07),0 0 55px rgba(200,30,80,0.35),0 25px 70px rgba(0,0,0,0.75);}
+  50%{box-shadow:0 0 0 10px rgba(200,30,80,0.11),0 0 90px rgba(200,30,80,0.6),0 25px 70px rgba(0,0,0,0.75);}
+}
+.l-frame-large img{width:100%;height:100%;object-fit:cover;display:block;}
+
+/* Elegant corner accents */
+.l-corner{position:absolute;width:26px;height:26px;border-color:#e91e63;border-style:solid;opacity:0.65;}
+.l-corner.tl{top:-10px;left:-10px;border-width:2.5px 0 0 2.5px;border-radius:5px 0 0 0;}
+.l-corner.tr{top:-10px;right:-10px;border-width:2.5px 2.5px 0 0;border-radius:0 5px 0 0;}
+.l-corner.bl{bottom:-10px;left:-10px;border-width:0 0 2.5px 2.5px;border-radius:0 0 0 5px;}
+.l-corner.br{bottom:-10px;right:-10px;border-width:0 2.5px 2.5px 0;border-radius:0 0 5px 0;}
+
+.l-badge{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#880e4f,#c2185b,#e91e63);color:#fff;
+  font-family:'Playfair Display',serif;font-size:11.5px;letter-spacing:0.18em;
+  padding:6px 22px;border-radius:22px;white-space:nowrap;
+  box-shadow:0 4px 22px rgba(200,30,80,0.55),0 0 10px rgba(255,128,171,0.2);
+  text-transform:uppercase;}
+
+/* Pair photos */
+.l-photo-pair{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;}
+.l-photo-small{position:relative;width:212px;height:248px;}
+.l-frame-small{
+  width:100%;height:100%;border-radius:18px;overflow:hidden;
+  border:2px solid rgba(220,80,130,0.42);
+  box-shadow:0 0 30px rgba(200,30,80,0.2),0 14px 45px rgba(0,0,0,0.65);}
+.l-frame-small img{width:100%;height:100%;object-fit:cover;display:block;}
+.l-photo-small:nth-child(1){animation:ladyTiltL 7s ease-in-out infinite;}
+.l-photo-small:nth-child(2){animation:ladyTiltR 7s ease-in-out infinite;}
+@keyframes ladyTiltL{0%,100%{transform:rotate(-2deg) translateY(2px);}50%{transform:rotate(0.6deg) translateY(-5px);}}
+@keyframes ladyTiltR{0%,100%{transform:rotate(2deg) translateY(2px);}50%{transform:rotate(-0.6deg) translateY(-5px);}}
+.l-photo-label{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
+  background:rgba(8,2,12,0.88);border:1px solid rgba(220,80,130,0.38);
+  color:#f48fb1;font-size:11px;letter-spacing:0.13em;padding:4px 15px;border-radius:15px;
+  white-space:nowrap;backdrop-filter:blur(6px);}
+
+/* Special note card */
+.l-note-section{width:100%;max-width:700px;margin-top:55px;
+  opacity:0;animation:fadeUp 0.95s ease 1.5s forwards;}
+.l-note-card{
+  position:relative;
+  background:linear-gradient(135deg,rgba(200,30,80,0.06),rgba(120,0,80,0.04),transparent);
+  border:1px solid rgba(220,80,130,0.3);
+  border-radius:24px;padding:44px 48px;backdrop-filter:blur(16px);
+  box-shadow:0 10px 55px rgba(0,0,0,0.5),0 0 100px rgba(180,0,60,0.07),
+             inset 0 1px 0 rgba(255,150,180,0.1),inset 0 0 70px rgba(200,30,80,0.03);}
+/* Top shimmer line */
+.l-note-card::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;border-radius:99px;
+  background:linear-gradient(90deg,transparent,rgba(255,128,171,0.4),transparent);}
+/* Sweep shimmer */
+.l-note-card::after{content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,150,180,0.05),transparent);
+  animation:shimmer 7s ease-in-out infinite;border-radius:24px;pointer-events:none;}
+
+.l-qmark{font-family:'Playfair Display',serif;font-size:110px;line-height:0.5;
+  color:#c2185b;opacity:0.18;position:absolute;pointer-events:none;user-select:none;}
+.l-qmark.open{top:16px;left:20px;}
+.l-qmark.close{bottom:6px;right:20px;}
+
+.l-note-text{font-family:'Playfair Display',serif;font-size:clamp(15px,2.2vw,18.5px);
+  line-height:1.92;color:#fce4ec;text-align:center;font-style:italic;position:relative;z-index:1;}
+.l-note-text strong{color:#ff80ab;font-style:normal;font-weight:600;
+  text-shadow:0 0 15px rgba(255,128,171,0.35);}
+
+.l-signature{margin-top:28px;text-align:center;position:relative;z-index:1;}
+.l-sig-ornament{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;}
+.l-sig-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,#e91e63);}
+.l-sig-line.r{background:linear-gradient(90deg,#e91e63,transparent);}
+.l-sig-diamond{width:5px;height:5px;background:#e91e63;transform:rotate(45deg);}
+.l-sig-text{color:#f06292;font-size:13px;letter-spacing:0.18em;text-transform:uppercase;
+  font-family:'Playfair Display',serif;}
+
+/* Bottom decoration */
+.l-footer-deco{text-align:center;margin-top:32px;opacity:0;
+  animation:fadeUp 0.9s ease 1.9s forwards;font-size:20px;letter-spacing:12px;}
+
+/* Shivani button */
+.shivani-btn-wrap{margin-top:36px;opacity:0;animation:fadeUp 1s ease 2.1s forwards;display:flex;justify-content:center;}
+.shivani-btn{
+  position:relative;
+  font-family:'Playfair Display',serif;
+  font-size:20px;
+  font-style:italic;
+  letter-spacing:0.25em;
+  color:#fff;
+  background:linear-gradient(135deg,#6a0030,#b0003a,#e91e63,#c2185b,#880030);
+  background-size:300% 300%;
+  border:none;
+  padding:16px 52px;
+  border-radius:50px;
+  cursor:pointer;
+  outline:none;
+  animation:shivaniGradient 4s ease infinite;
+  box-shadow:
+    0 0 0 2px rgba(255,128,171,0.25),
+    0 0 30px rgba(220,30,90,0.5),
+    0 0 70px rgba(180,0,60,0.3),
+    0 8px 30px rgba(0,0,0,0.6);
+  transition:transform 0.3s ease, box-shadow 0.3s ease;
+  overflow:hidden;
+}
+@keyframes shivaniGradient{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+/* Inner shimmer sweep */
+.shivani-btn::before{
+  content:'';position:absolute;top:0;left:-120%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);
+  animation:btnShimmer 2.8s ease-in-out infinite;border-radius:50px;
+}
+@keyframes btnShimmer{0%{left:-120%;}100%{left:200%;}}
+/* Glow ring pulse */
+.shivani-btn::after{
+  content:'';position:absolute;inset:-4px;border-radius:54px;
+  background:transparent;
+  border:1.5px solid rgba(255,128,171,0.4);
+  animation:ringPulse 2.5s ease-in-out infinite;
+}
+@keyframes ringPulse{
+  0%,100%{opacity:0.4;transform:scale(1);}
+  50%{opacity:0.9;transform:scale(1.04);}
+}
+.shivani-btn:hover{
+  transform:translateY(-4px) scale(1.04);
+  box-shadow:
+    0 0 0 3px rgba(255,128,171,0.4),
+    0 0 55px rgba(233,30,99,0.7),
+    0 0 100px rgba(180,0,60,0.4),
+    0 14px 40px rgba(0,0,0,0.7);
+}
+.shivani-btn:active{transform:translateY(-1px) scale(1.01);}
+.shivani-btn span{position:relative;z-index:1;}
+
+/* ===== SHIVANI / LIFE PARTNER PAGE ===== */
+#shivaniPage{
+  position:fixed;inset:0;z-index:150;
+  display:flex;flex-direction:column;align-items:center;
+  overflow-y:auto;overflow-x:hidden;
+  opacity:0;pointer-events:none;
+  transition:opacity 1.1s ease;
+  background:#000;
+}
+#shivaniPage.visible{opacity:1;pointer-events:all;}
+
+/* Animated canvas background */
+#spCanvas{position:fixed;inset:0;z-index:0;width:100%;height:100%;}
+
+/* Falling rose petals */
+.sp-petal{position:fixed;pointer-events:none;z-index:2;opacity:0;
+  animation:spPetal var(--spt,11s) ease-in infinite var(--sptd,0s);}
+@keyframes spPetal{
+  0%{opacity:0;top:-8%;transform:translateX(0) rotate(0deg) scale(0.7);}
+  10%{opacity:.92;}88%{opacity:.2;}
+  100%{opacity:0;top:108%;transform:translateX(var(--spx,60px)) rotate(var(--spr,540deg)) scale(1.1);}
+}
+/* Floating hearts */
+.sp-fheart{position:fixed;pointer-events:none;z-index:2;opacity:0;
+  animation:spFHeart var(--sfht,9s) ease-in infinite var(--sfhd,0s);}
+@keyframes spFHeart{
+  0%{opacity:0;transform:translateY(0) scale(.4) rotate(-15deg);}
+  15%{opacity:1;}80%{opacity:.25;}
+  100%{opacity:0;transform:translateY(-92vh) scale(1.4) rotate(20deg);}
+}
+
+/* Back button */
+.back-btn-shivani{
+  position:fixed;top:22px;left:24px;z-index:400;
+  background:rgba(100,0,40,0.18);border:1px solid rgba(255,100,150,0.4);
+  color:#ffb3ce;font-family:'Cormorant Garamond',serif;font-size:15px;letter-spacing:.13em;
+  padding:9px 24px;border-radius:30px;cursor:pointer;backdrop-filter:blur(14px);
+  transition:all .3s ease;
+}
+.back-btn-shivani:hover{background:rgba(180,0,80,.3);border-color:#e91e63;color:#fff;
+  box-shadow:0 0 28px rgba(180,0,80,.5);}
+
+/* Main content wrapper */
+.sp-content{
+  position:relative;z-index:3;
+  width:100%;max-width:760px;
+  display:flex;flex-direction:column;align-items:center;
+  padding:55px 22px 70px;
+}
+
+/* ── Crown of hearts ── */
+.sp-crown{
+  display:flex;align-items:flex-end;gap:6px;
+  opacity:0;animation:spFadeUp .8s ease .15s forwards;
+}
+.sp-crown span{
+  font-size:var(--cs,20px);
+  animation:spCrownBeat var(--cb,1.8s) ease-in-out infinite var(--cd,0s);
+  display:inline-block;
+}
+@keyframes spCrownBeat{0%,100%{transform:scale(1) translateY(0);}50%{transform:scale(1.3) translateY(-5px);}}
+
+/* ── Headline ── */
+.sp-hw{text-align:center;margin-top:18px;opacity:0;animation:spSlideDown 1s ease .4s forwards;}
+@keyframes spSlideDown{from{opacity:0;transform:translateY(-28px);}to{opacity:1;transform:translateY(0);}}
+.sp-sub{font-family:'Playfair Display',serif;font-size:13px;letter-spacing:.5em;
+  color:#f48fb1;text-transform:uppercase;font-style:italic;margin-bottom:12px;
+  text-shadow:0 0 22px rgba(244,143,177,.55);}
+.sp-title{font-family:'Playfair Display',serif;font-weight:700;
+  font-size:clamp(24px,5vw,52px);color:#fff;line-height:1.2;
+  text-shadow:0 0 70px rgba(220,30,100,.85),0 0 140px rgba(160,0,80,.4),0 5px 25px rgba(0,0,0,.95);}
+.sp-title em{
+  display:block;font-style:italic;margin-top:6px;
+  font-size:1.08em;color:#ff6da0;
+  text-shadow:0 0 50px rgba(255,109,160,1),0 0 100px rgba(220,30,90,.7),0 0 180px rgba(180,0,70,.35);
+  animation:spTitlePulse 3s ease-in-out infinite alternate;
+}
+@keyframes spTitlePulse{
+  from{text-shadow:0 0 45px rgba(255,109,160,.9),0 0 90px rgba(220,30,90,.5);}
+  to{text-shadow:0 0 80px rgba(255,109,160,1),0 0 160px rgba(220,30,90,.8),0 0 240px rgba(180,0,70,.4);}
+}
+.sp-divider{display:flex;align-items:center;gap:16px;margin:20px 0 0;justify-content:center;}
+.sp-dline{height:1px;width:90px;}
+.sp-dline.l{background:linear-gradient(90deg,transparent,#e91e63);}
+.sp-dline.r{background:linear-gradient(90deg,#e91e63,transparent);}
+.sp-dheart{font-size:24px;animation:spHeartBeat 1.4s ease-in-out infinite;}
+@keyframes spHeartBeat{0%,100%{transform:scale(1);}14%{transform:scale(1.35);}28%{transform:scale(1);}42%{transform:scale(1.2);}70%{transform:scale(1);}}
+
+/* ── Photo ── */
+.sp-photo-sec{
+  width:100%;display:flex;justify-content:center;
+  margin-top:50px;
+  opacity:0;animation:spFadeUp 1s ease .9s forwards;
+}
+@keyframes spFadeUp{from{opacity:0;transform:translateY(35px);}to{opacity:1;transform:translateY(0);}}
+.sp-photo-wrap{position:relative;width:310px;height:380px;}
+
+/* Three rotating orbit rings */
+.sp-orbit{position:absolute;border-radius:50%;border-style:dashed;border-width:1.5px;}
+.sp-orbit-1{
+  inset:-28px;border-color:rgba(255,109,160,.28);
+  animation:spOrbit1 28s linear infinite;
+}
+.sp-orbit-1::before,.sp-orbit-1::after{content:'❤️';position:absolute;font-size:15px;}
+.sp-orbit-1::before{top:-9px;left:50%;transform:translateX(-50%);}
+.sp-orbit-1::after{bottom:-9px;left:50%;transform:translateX(-50%);}
+@keyframes spOrbit1{to{transform:rotate(360deg);}}
+.sp-orbit-2{
+  inset:-14px;border-color:rgba(220,30,90,.2);
+  animation:spOrbit2 18s linear infinite;
+}
+.sp-orbit-2::before,.sp-orbit-2::after{content:'🌹';position:absolute;font-size:12px;}
+.sp-orbit-2::before{top:-7px;left:50%;transform:translateX(-50%);}
+.sp-orbit-2::after{bottom:-7px;left:50%;transform:translateX(-50%);}
+@keyframes spOrbit2{to{transform:rotate(-360deg);}}
+.sp-orbit-3{
+  inset:-4px;border-color:rgba(255,180,200,.15);
+  animation:spOrbit1 35s linear infinite reverse;
+}
+
+/* Photo frame */
+.sp-frame{
+  width:100%;height:100%;
+  border-radius:42% 58% 48% 52% / 40% 44% 56% 60%;
+  overflow:hidden;
+  border:3px solid rgba(220,60,110,.65);
+  box-shadow:
+    0 0 0 10px rgba(160,0,70,.07),
+    0 0 70px rgba(200,20,80,.6),
+    0 0 140px rgba(140,0,60,.32),
+    0 35px 90px rgba(0,0,0,.85);
+  animation:spFrameBreath 4.5s ease-in-out infinite;
+}
+@keyframes spFrameBreath{
+  0%,100%{box-shadow:0 0 0 10px rgba(160,0,70,.07),0 0 70px rgba(200,20,80,.55),0 35px 90px rgba(0,0,0,.85);}
+  50%{box-shadow:0 0 0 16px rgba(160,0,70,.12),0 0 120px rgba(200,20,80,.82),0 0 200px rgba(140,0,60,.35),0 35px 90px rgba(0,0,0,.85);}
+}
+.sp-frame img{width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform 8s ease;filter:brightness(1.06) saturate(1.1);}
+.sp-frame img:hover{transform:scale(1.04);}
+
+/* Corner filigree */
+.sp-c{position:absolute;width:30px;height:30px;border-color:#e91e63;border-style:solid;opacity:.65;}
+.sp-c.tl{top:-13px;left:-13px;border-width:2.5px 0 0 2.5px;border-radius:5px 0 0 0;}
+.sp-c.tr{top:-13px;right:-13px;border-width:2.5px 2.5px 0 0;border-radius:0 5px 0 0;}
+.sp-c.bl{bottom:-13px;left:-13px;border-width:0 0 2.5px 2.5px;border-radius:0 0 0 5px;}
+.sp-c.br{bottom:-13px;right:-13px;border-width:0 2.5px 2.5px 0;border-radius:0 0 5px 0;}
+
+/* Name ribbon */
+.sp-ribbon{
+  position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#5c001e,#b0003a,#e91e63,#c2185b);
+  background-size:200% 200%;animation:spRibbonGrad 4s ease infinite;
+  color:#fff;font-family:'Playfair Display',serif;
+  font-size:16px;font-style:italic;letter-spacing:.22em;
+  padding:9px 32px;border-radius:28px;white-space:nowrap;
+  box-shadow:0 5px 28px rgba(180,0,70,.65),0 0 18px rgba(255,128,171,.25);
+}
+@keyframes spRibbonGrad{0%{background-position:0 50%;}50%{background-position:100% 50%;}100%{background-position:0 50%;}}
+
+/* ── Special Note ── */
+.sp-note-sec{
+  width:100%;max-width:680px;
+  margin-top:66px;
+  opacity:0;animation:spFadeUp 1s ease 1.35s forwards;
+}
+.sp-note-card{
+  position:relative;
+  background:
+    linear-gradient(135deg,rgba(180,0,70,.08) 0%,rgba(100,0,50,.05) 50%,rgba(50,0,30,.03) 100%);
+  border:1px solid rgba(220,60,110,.3);
+  border-radius:28px;
+  padding:52px 52px 46px;
+  backdrop-filter:blur(20px);
+  overflow:hidden;
+  box-shadow:
+    0 15px 70px rgba(0,0,0,.55),
+    0 0 130px rgba(160,0,70,.09),
+    inset 0 1px 0 rgba(255,150,180,.14),
+    inset 0 -1px 0 rgba(220,60,110,.08);
+}
+/* Shimmer top border */
+.sp-note-card::before{
+  content:'';position:absolute;top:0;left:5%;right:5%;height:1.5px;border-radius:99px;
+  background:linear-gradient(90deg,transparent,rgba(255,109,160,.55),rgba(220,30,90,.7),rgba(255,109,160,.55),transparent);
+}
+/* Moving shimmer sweep */
+.sp-note-card::after{
+  content:'';position:absolute;top:0;left:-120%;width:55%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,150,180,.06),transparent);
+  animation:shimmer 9s ease-in-out infinite;border-radius:28px;pointer-events:none;
+}
+/* Giant quote marks */
+.sp-qm{font-family:'Playfair Display',serif;font-size:130px;line-height:.4;
+  color:#c2185b;opacity:.14;position:absolute;pointer-events:none;user-select:none;}
+.sp-qm.o{top:14px;left:16px;}
+.sp-qm.c{bottom:4px;right:16px;line-height:.48;}
+
+/* Floating accent icons */
+.sp-float{position:absolute;font-size:var(--sff,16px);opacity:0;pointer-events:none;
+  animation:spFloatIcon var(--sffd,5s) ease-in-out infinite var(--sffdd,0s);}
+@keyframes spFloatIcon{0%,100%{opacity:.22;transform:translateY(0) rotate(-6deg);}50%{opacity:.7;transform:translateY(-14px) rotate(6deg);}}
+
+/* Note text */
+.sp-note-text{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(15.5px,2.3vw,19.5px);
+  line-height:2.05;color:#fce4ec;
+  text-align:center;font-style:italic;
+  position:relative;z-index:1;letter-spacing:.012em;
+}
+.sp-note-text strong{color:#ff80ab;font-style:normal;font-weight:600;
+  text-shadow:0 0 20px rgba(255,128,171,.45);}
+.sp-name-hl{
+  font-size:1.18em;color:#ff4d94;font-style:normal;font-weight:700;
+  text-shadow:0 0 30px rgba(255,77,148,.7),0 0 60px rgba(220,30,90,.35);
+  animation:spNameGlow 2.5s ease-in-out infinite alternate;
+}
+@keyframes spNameGlow{
+  from{text-shadow:0 0 22px rgba(255,77,148,.55),0 0 45px rgba(220,30,90,.25);}
+  to{text-shadow:0 0 45px rgba(255,77,148,.95),0 0 90px rgba(220,30,90,.55),0 0 140px rgba(180,0,70,.3);}
+}
+
+/* Signature */
+.sp-sig{margin-top:34px;text-align:center;position:relative;z-index:1;}
+.sp-sig-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px;}
+.sp-sig-l{height:1px;width:60px;}
+.sp-sig-l.l{background:linear-gradient(90deg,transparent,#e91e63);}
+.sp-sig-l.r{background:linear-gradient(90deg,#e91e63,transparent);}
+.sp-sig-heart-el{font-size:16px;animation:spHeartBeat 1.4s ease-in-out infinite;}
+.sp-sig-name{font-family:'Playfair Display',serif;font-size:17px;font-style:italic;
+  letter-spacing:.2em;color:#ff80ab;text-shadow:0 0 22px rgba(255,128,171,.45);}
+.sp-sig-role{font-family:'Cormorant Garamond',serif;font-size:12px;
+  letter-spacing:.35em;color:rgba(244,143,177,.55);text-transform:uppercase;margin-top:5px;}
+
+/* Footer */
+.sp-footer{text-align:center;margin-top:38px;
+  opacity:0;animation:spFadeUp 1s ease 1.8s forwards;
+  font-size:24px;letter-spacing:14px;}
+</style>
+</style>
+</head>
+<body>
+
+<!-- ===== BOUQUET PAGE ===== -->
+<div class="stars" id="stars"></div>
+<div id="petals"></div>
+<div class="scene">
+  <canvas id="c" width="700" height="610"></canvas>
+  <p class="choose-text">choose a flower</p>
+  <div class="ornament">
+    <div class="ornament-line"></div>
+    <div class="ornament-diamond"></div>
+    <div class="ornament-line"></div>
+  </div>
+</div>
+
+<!-- ===== DAUGHTER / SUNFLOWER PAGE ===== -->
+<div id="daughterPage">
+  <div class="sun-aurora">
+    <div class="sun-band"></div><div class="sun-band"></div><div class="sun-band"></div><div class="sun-band"></div>
+  </div>
+  <div class="sunrays" id="sunrays"></div>
+  <button class="back-btn-sun" onclick="closeDaughterPage()">← Back to Bouquet</button>
+  <div class="daughter-content">
+    <div class="header-sunflower">
+      <svg width="110" height="110" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="spg" cx="20%" cy="20%" r="80%"><stop offset="0%" stop-color="#fff176"/><stop offset="50%" stop-color="#ffc107"/><stop offset="100%" stop-color="#e65100"/></radialGradient>
+          <radialGradient id="sdg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#5d3a1a"/><stop offset="60%" stop-color="#3e2005"/><stop offset="100%" stop-color="#1a0800"/></radialGradient>
+        </defs>
+        <g transform="translate(55,55)">
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(0)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(22.5)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(45)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(67.5)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(90)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(112.5)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(135)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(157.5)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(180)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(202.5)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(225)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(247.5)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(270)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(292.5)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(315)"/>
+          <ellipse cx="0" cy="-28" rx="7" ry="20" fill="url(#spg)" transform="rotate(337.5)"/>
+          <circle cx="0" cy="0" r="18" fill="url(#sdg)"/>
+          <circle cx="-4" cy="-4" r="6" fill="rgba(255,255,255,0.07)"/>
+        </g>
+      </svg>
+    </div>
+    <div class="d-headline-wrap">
+      <div class="d-headline-sub">With Endless Love &amp; Pride</div>
+      <div class="d-headline-main">For The World's<br><span>Best Daughter</span></div>
+      <div class="d-headline-divider">
+        <div class="d-hdiv-line"></div>
+        <div class="d-hdiv-icon">🌻</div>
+        <div class="d-hdiv-line rev"></div>
+      </div>
+    </div>
+    <div class="d-photos-section">
+      <div class="d-photo-center-wrap">
+        <div class="d-photo-large">
+          <div class="d-ring"></div>
+          <div class="d-photo-frame">
+            <img src="1.jpg" alt="Teacher"
+              onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22280%22 height=%22320%22><defs><linearGradient id=%22dg%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%25%22 stop-color=%22%23f9a825%22/><stop offset=%22100%25%22 stop-color=%22%23e65100%22/></linearGradient></defs><rect width=%22280%22 height=%22320%22 fill=%22url(%23dg)%22/><text x=%2250%25%22 y=%2245%25%22 text-anchor=%22middle%22 font-size=%2270%22 fill=%22white%22>👧</text><text x=%2250%25%22 y=%2268%25%22 text-anchor=%22middle%22 font-size=%2216%22 fill=%22rgba(255,255,255,0.95)%22 font-family=%22Georgia%22>Our Sunshine</text></svg>'"/>
+          </div>
+          <div class="d-corner tl"></div><div class="d-corner tr"></div>
+          <div class="d-corner bl"></div><div class="d-corner br"></div>
+          <div class="d-photo-badge">🌻 Our Sunshine 🌻</div>
+        </div>
+      </div>
+      <div class="d-photo-pair">
+        <div class="d-photo-small">
+          <div class="d-photo-frame">
+            <img src="2.jpg" alt="Classroom"
+              onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22210%22 height=%22245%22><defs><linearGradient id=%22dg2%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%25%22 stop-color=%22%23fbc02d%22/><stop offset=%22100%25%22 stop-color=%22%23f57f17%22/></linearGradient></defs><rect width=%22210%22 height=%22245%22 fill=%22url(%23dg2)%22/><text x=%2250%25%22 y=%2245%25%22 text-anchor=%22middle%22 font-size=%2255%22 fill=%22white%22>🌸</text><text x=%2250%25%22 y=%2268%25%22 text-anchor=%22middle%22 font-size=%2213%22 fill=%22rgba(255,255,255,0.9)%22 font-family=%22Georgia%22>Joyful Moments</text></svg>'"/>
+          </div>
+          <div class="d-photo-label">✦ Joyful Moments ✦</div>
+        </div>
+        <div class="d-photo-small">
+          <div class="d-photo-frame">
+            <img src="IMG-20251011-WA0176.jpg" alt="Teaching"
+              onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22210%22 height=%22245%22><defs><linearGradient id=%22dg3%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%25%22 stop-color=%22%23ff8f00%22/><stop offset=%22100%25%22 stop-color=%22%23bf360c%22/></linearGradient></defs><rect width=%22210%22 height=%22245%22 fill=%22url(%23dg3)%22/><text x=%2250%25%22 y=%2245%25%22 text-anchor=%22middle%22 font-size=%2255%22 fill=%22white%22>✨</text><text x=%2250%25%22 y=%2268%25%22 text-anchor=%22middle%22 font-size=%2213%22 fill=%22rgba(255,255,255,0.9)%22 font-family=%22Georgia%22>Pure Happiness</text></svg>'"/>
+          </div>
+          <div class="d-photo-label">✦ Pure Happiness ✦</div>
+        </div>
+      </div>
+    </div>
+    <div class="d-note-section">
+      <div class="d-note-card">
+        <div class="d-quote-mark open">"</div>
+        <div class="d-quote-mark close">"</div>
+        <p class="d-note-text">
+          This is for the girl who deserves an award for being the best daughter someone could ever wish for.
+          Nowadays many children speak to their parents with frustration and irritation, but she is different —
+          she belongs to the ideal generation when kids treated their parents with utmost respect, listened to every
+          word, and held their parents' words like something sacred.
+          <br><br>
+          She is the kind of daughter you only see in TV serials: the ideal daughter who keeps track of her mother's
+          medicine, watches over her father's health, and quietly tries to do everything by herself so she won't
+          make them worry, even when the task is the biggest.
+          <br><br>
+          Sometimes I wonder if this is how a daughter should be, or if she is some heavenly angel — but I'm sure of
+          one thing: her parents must have saved the world in their last life to have a daughter who loves them with
+          everything she has.
+          <br><br>
+          Words cannot fully express how kind and loving she is — the best daughter, <strong>Shivani Singh</strong>.
+          <br><br>
+          🌻 &nbsp;With all my admiration &nbsp;🌻
+        </p>
+        <div class="d-note-signature">
+          <span class="d-sig-line"></span>
+          <span class="d-sig-text">Forever Your Family</span>
+        </div>
+      </div>
+    </div>
+    <div class="d-starburst">🌟 ✨ 🌻 ✨ 🌟</div>
+  </div>
+</div>
+
+<!-- ===== ROSE / BEST LADY PAGE ===== -->
+<div id="ladyPage">
+  <div class="lady-aurora">
+    <div class="lady-band"></div><div class="lady-band"></div>
+    <div class="lady-band"></div><div class="lady-band"></div>
+  </div>
+
+  <button class="back-btn-rose" onclick="closeLadyPage()">← Back to Bouquet</button>
+
+  <div class="lady-content">
+
+    <!-- Rose SVG header -->
+    <div class="header-rose-icon">
+      <svg width="115" height="115" viewBox="0 0 115 115" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="rp1" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#ff80ab"/><stop offset="50%" stop-color="#e91e63"/><stop offset="100%" stop-color="#6a0030"/></radialGradient>
+          <radialGradient id="rp2" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#ffd6e0"/><stop offset="50%" stop-color="#c2185b"/><stop offset="100%" stop-color="#880030"/></radialGradient>
+        </defs>
+        <g transform="translate(57,57)">
+          <!-- Sepals -->
+          <path d="M0,28 Q-12,22 -14,10 Q-4,18 0,28Z" fill="#2e7d32"/><path d="M0,28 Q12,22 14,10 Q4,18 0,28Z" fill="#388e3c"/>
+          <path d="M0,28 Q-18,24 -18,12 Q-8,20 0,28Z" fill="#1b5e20"/><path d="M0,28 Q18,24 18,12 Q8,20 0,28Z" fill="#2e7d32"/>
+          <!-- Layer 1: outer petals -->
+          <ellipse cx="0" cy="-24" rx="12" ry="20" fill="url(#rp1)" transform="rotate(0)" opacity="0.93"/>
+          <ellipse cx="0" cy="-24" rx="12" ry="20" fill="url(#rp1)" transform="rotate(60)" opacity="0.90"/>
+          <ellipse cx="0" cy="-24" rx="12" ry="20" fill="url(#rp1)" transform="rotate(120)" opacity="0.93"/>
+          <ellipse cx="0" cy="-24" rx="12" ry="20" fill="url(#rp1)" transform="rotate(180)" opacity="0.90"/>
+          <ellipse cx="0" cy="-24" rx="12" ry="20" fill="url(#rp1)" transform="rotate(240)" opacity="0.93"/>
+          <ellipse cx="0" cy="-24" rx="12" ry="20" fill="url(#rp1)" transform="rotate(300)" opacity="0.90"/>
+          <!-- Layer 2: mid petals -->
+          <ellipse cx="0" cy="-17" rx="9" ry="15" fill="url(#rp2)" transform="rotate(30)" opacity="0.95"/>
+          <ellipse cx="0" cy="-17" rx="9" ry="15" fill="url(#rp2)" transform="rotate(90)" opacity="0.92"/>
+          <ellipse cx="0" cy="-17" rx="9" ry="15" fill="url(#rp2)" transform="rotate(150)" opacity="0.95"/>
+          <ellipse cx="0" cy="-17" rx="9" ry="15" fill="url(#rp2)" transform="rotate(210)" opacity="0.92"/>
+          <ellipse cx="0" cy="-17" rx="9" ry="15" fill="url(#rp2)" transform="rotate(270)" opacity="0.95"/>
+          <ellipse cx="0" cy="-17" rx="9" ry="15" fill="url(#rp2)" transform="rotate(330)" opacity="0.92"/>
+          <!-- Layer 3: inner -->
+          <ellipse cx="0" cy="-10" rx="6" ry="10" fill="#ffd6e0" transform="rotate(15)" opacity="0.97"/>
+          <ellipse cx="0" cy="-10" rx="6" ry="10" fill="#ffd6e0" transform="rotate(75)" opacity="0.95"/>
+          <ellipse cx="0" cy="-10" rx="6" ry="10" fill="#ffd6e0" transform="rotate(135)" opacity="0.97"/>
+          <ellipse cx="0" cy="-10" rx="6" ry="10" fill="#ff80ab" transform="rotate(195)" opacity="0.95"/>
+          <ellipse cx="0" cy="-10" rx="6" ry="10" fill="#ff80ab" transform="rotate(255)" opacity="0.97"/>
+          <ellipse cx="0" cy="-10" rx="6" ry="10" fill="#ffd6e0" transform="rotate(315)" opacity="0.95"/>
+          <!-- Centre bud -->
+          <ellipse cx="0" cy="-3" rx="4" ry="6" fill="#fff0f5" opacity="0.98"/>
+          <!-- Dew drop -->
+          <ellipse cx="-1" cy="-5" rx="2" ry="1.5" fill="rgba(255,255,255,0.85)"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Headline -->
+    <div class="l-headline-wrap">
+      <div class="l-headline-sub">A Celebration of Grace &amp; Strength</div>
+      <div class="l-headline-main">
+        For The World's<br>
+        <em>Best Lady</em>
+      </div>
+      <div class="l-divider">
+        <div class="l-div-line left"></div>
+        <div class="l-div-icon">🌹</div>
+        <div class="l-div-line right"></div>
+      </div>
+    </div>
+
+    <!-- Photos -->
+    <div class="l-photos-section">
+
+      <!-- Large centre photo -->
+      <div class="l-photo-center-wrap">
+        <div class="l-photo-large">
+          <div class="l-petal-ring"></div>
+          <div class="l-petal-ring inner"></div>
+          <div class="l-frame-large">
+            <img src="IMG-20250803-WA0013.jpg" alt="Best Lady"
+              onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22270%22 height=%22330%22><defs><radialGradient id=%22lg%22 cx=%2240%25%22 cy=%2235%25%22 r=%2270%25%22><stop offset=%220%25%22 stop-color=%22%23f06292%22/><stop offset=%22100%25%22 stop-color=%22%23880e4f%22/></radialGradient></defs><rect width=%22270%22 height=%22330%22 fill=%22url(%23lg)%22/><text x=%2250%25%22 y=%2244%25%22 text-anchor=%22middle%22 font-size=%2268%22 fill=%22white%22>👩</text><text x=%2250%25%22 y=%2268%25%22 text-anchor=%22middle%22 font-size=%2216%22 fill=%22rgba(255,255,255,0.95)%22 font-family=%22Georgia%22>The Best Lady</text></svg>'"/>
+          </div>
+          <div class="l-corner tl"></div><div class="l-corner tr"></div>
+          <div class="l-corner bl"></div><div class="l-corner br"></div>
+          <div class="l-badge">🌹 Timeless &amp; Extraordinary 🌹</div>
+        </div>
+      </div>
+
+      <!-- Pair photos -->
+      <div class="l-photo-pair">
+        <div class="l-photo-small">
+          <div class="l-frame-small">
+            <img src="IMG-20250824-WA0013.jpg" alt="Grace"
+              onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22212%22 height=%22248%22><defs><linearGradient id=%22lg2%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%25%22 stop-color=%22%23ad1457%22/><stop offset=%22100%25%22 stop-color=%22%234a0030%22/></linearGradient></defs><rect width=%22212%22 height=%22248%22 fill=%22url(%23lg2)%22/><text x=%2250%25%22 y=%2244%25%22 text-anchor=%22middle%22 font-size=%2254%22 fill=%22white%22>💐</text><text x=%2250%25%22 y=%2268%25%22 text-anchor=%22middle%22 font-size=%2213%22 fill=%22rgba(255,255,255,0.9)%22 font-family=%22Georgia%22>Grace &amp; Elegance</text></svg>'"/>
+          </div>
+          <div class="l-photo-label">✦ Grace &amp; Elegance ✦</div>
+        </div>
+        <div class="l-photo-small">
+          <div class="l-frame-small">
+            <img src="IMG-20250803-WA0017.jpg" alt="Strength"
+              onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22212%22 height=%22248%22><defs><linearGradient id=%22lg3%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%25%22 stop-color=%22%23c62828%22/><stop offset=%22100%25%22 stop-color=%22%234a0010%22/></linearGradient></defs><rect width=%22212%22 height=%22248%22 fill=%22url(%23lg3)%22/><text x=%2250%25%22 y=%2244%25%22 text-anchor=%22middle%22 font-size=%2254%22 fill=%22white%22>🌹</text><text x=%2250%25%22 y=%2268%25%22 text-anchor=%22middle%22 font-size=%2213%22 fill=%22rgba(255,255,255,0.9)%22 font-family=%22Georgia%22>Strength &amp; Soul</text></svg>'"/>
+          </div>
+          <div class="l-photo-label">✦ Strength &amp; Soul ✦</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Special Note -->
+    <div class="l-note-section">
+      <div class="l-note-card">
+        <div class="l-qmark open">"</div>
+        <div class="l-qmark close">"</div>
+        <p class="l-note-text">
+          This is for the lady who is a complete little girl from the inside — pure, kind, fun-loving, a little naughty,
+          but hidden behind the weight of responsibility.
+          <br><br>
+          She never got the chance to live her childhood properly because our country expects girls to mature too soon.
+          So the child inside her never got to live the way she wished, and she became a young lady with radiant beauty,
+          holding both tradition and a mature mind.
+          <br><br>
+          To the world she became a daughter, a teacher, a young woman — but for herself, she was just Shivani who wanted
+          to live more freely.
+          <br><br>
+          She has big dreams, but the well she is placed into is too small to let her fly. Still, she keeps trying hard,
+          not giving up, standing up daily, improving, and caring for her family.
+          <br><br>
+          In all of this, she is forgetting herself — which she shouldn't.
+          I want her to always be happy, to be the girl she wants to be, and to enjoy herself to the fullest.
+        </p>
+        <div class="l-signature">
+          <div class="l-sig-ornament">
+            <div class="l-sig-line"></div>
+            <div class="l-sig-diamond"></div>
+            <div class="l-sig-line r"></div>
+          </div>
+          <div class="l-sig-text">Forever Rooted, Forever Free</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="l-footer-deco">🌹 ✨ 💖 ✨ 🌹</div>
+
+    <div class="shivani-btn-wrap">
+      <button class="shivani-btn" onclick="shivaniBtnClick()">
+        <span>🌹 &nbsp;Shivani&nbsp; 🌹</span>
+      </button>
+    </div>
+
+  </div><!-- end lady-content -->
+</div><!-- end ladyPage -->
+
+<!-- ===== SHIVANI / LIFE PARTNER PAGE ===== -->
+<div id="shivaniPage">
+  <canvas id="spCanvas"></canvas>
+  <button class="back-btn-shivani" onclick="closeShivaniPage()">← Back</button>
+
+  <div class="sp-content">
+
+    <!-- Crown of hearts -->
+    <div class="sp-crown">
+      <span style="--cs:16px;--cb:2.3s;--cd:0s;">💖</span>
+      <span style="--cs:19px;--cb:1.9s;--cd:.18s;">❤️</span>
+      <span style="--cs:24px;--cb:1.5s;--cd:.08s;">💗</span>
+      <span style="--cs:28px;--cb:1.4s;--cd:.05s;">❤️</span>
+      <span style="--cs:24px;--cb:1.6s;--cd:.12s;">💗</span>
+      <span style="--cs:19px;--cb:2.0s;--cd:.22s;">❤️</span>
+      <span style="--cs:16px;--cb:2.2s;--cd:.04s;">💖</span>
+    </div>
+
+    <!-- Headline -->
+    <div class="sp-hw">
+      <div class="sp-sub">Forever &amp; Always · Only You</div>
+      <div class="sp-title">
+        To The Best Life Partner<br>
+        <em>I Could Have Wished For</em>
+      </div>
+      <div class="sp-divider">
+        <div class="sp-dline l"></div>
+        <div class="sp-dheart">💕</div>
+        <div class="sp-dline r"></div>
+      </div>
+    </div>
+
+    <!-- Photo -->
+    <div class="sp-photo-sec">
+      <div class="sp-photo-wrap">
+        <div class="sp-orbit sp-orbit-1"></div>
+        <div class="sp-orbit sp-orbit-2"></div>
+        <div class="sp-orbit sp-orbit-3"></div>
+        <div class="sp-frame">
+          <video controls muted playsinline loop style="width:100%;height:100%;object-fit:cover;display:block;">
+            <source src="VID-20251011-WA0013.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div class="sp-c tl"></div>
+        <div class="sp-c tr"></div>
+        <div class="sp-c bl"></div>
+        <div class="sp-c br"></div>
+        <div class="sp-ribbon">🌹 &nbsp;Shivani&nbsp; 🌹</div>
+      </div>
+    </div>
+
+    <!-- Special Note -->
+    <div class="sp-note-sec">
+      <div class="sp-note-card">
+        <div class="sp-qm o">"</div>
+        <div class="sp-qm c">"</div>
+        <span class="sp-float" style="top:10px;right:28px;--sff:17px;--sffd:4.2s;--sffdd:0s;">🌹</span>
+        <span class="sp-float" style="top:12px;left:28px;--sff:15px;--sffd:5.1s;--sffdd:.9s;">💖</span>
+        <span class="sp-float" style="bottom:14px;right:42px;--sff:16px;--sffd:4.6s;--sffdd:.4s;">✨</span>
+        <span class="sp-float" style="bottom:14px;left:42px;--sff:15px;--sffd:5.4s;--sffdd:1.3s;">💕</span>
+
+        <p class="sp-note-text">
+          Yee uss ladki keliye hai jiska mujhe pata bhi nai thaa kii mujhe uski jarurat hai.
+          Achank see ek din woh mere jindagi mein aayi aur mere dil mein kuch naya saa bana dii.
+          Pehle toh smj nai aaya kyaa hai, bss khushi badh gayi, sukoon max pr chala gaya
+          aur woh mere naye emotions ki waja bnn gayi.
+          <br><br>
+          Usse baate krta toh aisa lgta jese life ke best moments jii raha huu.
+          Tb smjne laga pyaar krne ko log pyaar mein pagal hona kyu kehte hai.
+          <br><br>
+          Abb usse aise diwangi hogai hai jese jese uske paas aane ke baad saare hosh bhul jaata huu.
+          Bss wahi dikhti hai aur aise lgta kii abb chaahe pagal hojau pr iske pyaar mein hee hounga.
+          <br><br>
+          Khushi milti hai jbb woh mera khayal rakhti hai,
+          mere liye gussa aur dukhi hoti hai,
+          mere future keliye wish krti hai.
+          <br><br>
+          Abb toh mujhe bss uska sath chahiye,
+          uska mere hatho mein hath chahiye,
+          aur mere liyee uske dil mein bohot saara dular chahiye.
+          <br><br>
+          Happy Anniversary My LOVE,
+          <br>
+          <strong>I LOVE YOU Shivani</strong>
+        </p>
+
+        <div class="sp-sig">
+          <div class="sp-sig-row">
+            <div class="sp-sig-l l"></div>
+            <span class="sp-sig-heart-el">❤️</span>
+            <div class="sp-sig-l r"></div>
+          </div>
+          <div class="sp-sig-name">Yours, Always &amp; Forever</div>
+          <div class="sp-sig-role">Your Life Partner</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sp-footer">🌹 ❤️ 💖 ❤️ 🌹</div>
+
+  </div><!-- end sp-content -->
+</div><!-- end shivaniPage -->
+
+<!-- ===== TEACHER PAGE ===== -->
+<div id="teacherPage">
+  <div class="aurora">
+    <div class="aurora-band"></div>
+    <div class="aurora-band"></div>
+    <div class="aurora-band"></div>
+  </div>
+
+  <button class="back-btn" onclick="closeTeacherPage()">← Back to Bouquet</button>
+
+  <div class="teacher-content">
+    <!-- Hibiscus SVG header decoration -->
+    <div class="header-hibiscus">
+      <svg width="90" height="90" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="hp1" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#ff85c0"/><stop offset="40%" stop-color="#e91e7a"/><stop offset="100%" stop-color="#880e4f"/></radialGradient>
+        </defs>
+        <g transform="translate(45,45)">
+          <ellipse cx="0" cy="-18" rx="10" ry="22" fill="url(#hp1)" transform="rotate(0)"/>
+          <ellipse cx="0" cy="-18" rx="10" ry="22" fill="url(#hp1)" transform="rotate(72)"/>
+          <ellipse cx="0" cy="-18" rx="10" ry="22" fill="url(#hp1)" transform="rotate(144)"/>
+          <ellipse cx="0" cy="-18" rx="10" ry="22" fill="url(#hp1)" transform="rotate(216)"/>
+          <ellipse cx="0" cy="-18" rx="10" ry="22" fill="url(#hp1)" transform="rotate(288)"/>
+          <line x1="0" y1="0" x2="0" y2="-30" stroke="#ff8f00" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="0" cy="-31" r="4" fill="#ffe57a"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Headline -->
+    <div class="headline-wrap">
+      <div class="headline-sub">A Tribute With Love</div>
+      <div class="headline-main">For The World's<br><span>Best Teacher</span></div>
+      <div class="headline-divider">
+        <div class="hdiv-line"></div>
+        <div class="hdiv-flower">🌺</div>
+        <div class="hdiv-line rev"></div>
+      </div>
+    </div>
+
+    <!-- Photos -->
+    <div class="photos-section">
+      <!-- Large center photo -->
+      <div class="photo-center-wrap">
+        <div class="photo-large">
+          <div class="photo-frame">
+            <img src="IMG-20250827-WA0003.jpg" alt="Daughter" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22280%22 height=%22320%22><defs><linearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%25%22 stop-color=%22%23e91e7a%22/><stop offset=%22100%25%22 stop-color=%22%23880e4f%22/></linearGradient></defs><rect width=%22280%22 height=%22320%22 fill=%22url(%23g)%22/><text x=%2250%25%22 y=%2248%25%22 text-anchor=%22middle%22 font-size=%2260%22 fill=%22white%22>👩‍🏫</text><text x=%2250%25%22 y=%2268%25%22 text-anchor=%22middle%22 font-size=%2216%22 fill=%22rgba(255,255,255,0.9)%22 font-family=%22Georgia%22>Our Teacher</text></svg>'"/>
+          </div>
+          <div class="photo-corner tl"></div>
+          <div class="photo-corner tr"></div>
+          <div class="photo-corner bl"></div>
+          <div class="photo-corner br"></div>
+          <div class="photo-badge">⭐ Most Inspiring ⭐</div>
+        </div>
+      </div>
+
+      <!-- Pair of photos -->
+      <div class="photo-pair">
+        <div class="photo-small">
+          <div class="photo-frame">
+            <img src="IMG-20250901-WA0009.jpg" alt="Joyful moments" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22210%22 height=%22240%22><defs><linearGradient id=%22g2%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%25%22 stop-color=%22%237c4dff%22/><stop offset=%22100%25%22 stop-color=%22%23311b92%22/></linearGradient></defs><rect width=%22210%22 height=%22240%22 fill=%22url(%23g2)%22/><text x=%2250%25%22 y=%2248%25%22 text-anchor=%22middle%22 font-size=%2250%22 fill=%22white%22>📚</text><text x=%2250%25%22 y=%2268%25%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22rgba(255,255,255,0.85)%22 font-family=%22Georgia%22>Classroom Moments</text></svg>'"/>
+          </div>
+          <div class="photo-label">✦ Classroom Moments ✦</div>
+        </div>
+        <div class="photo-small">
+          <div class="photo-frame">
+            <img src="IMG-20250901-WA0019.jpg" alt="Pure happiness" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22210%22 height=%22240%22><defs><linearGradient id=%22g3%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22><stop offset=%220%25%22 stop-color=%22%2300bcd4%22/><stop offset=%22100%25%22 stop-color=%22%23006064%22/></linearGradient></defs><rect width=%22210%22 height=%22240%22 fill=%22url(%23g3)%22/><text x=%2250%25%22 y=%2248%25%22 text-anchor=%22middle%22 font-size=%2250%22 fill=%22white%22>🌟</text><text x=%2250%25%22 y=%2268%25%22 text-anchor=%22middle%22 font-size=%2214%22 fill=%22rgba(255,255,255,0.85)%22 font-family=%22Georgia%22>Shaping Futures</text></svg>'"/>
+          </div>
+          <div class="photo-label">✦ Shaping Futures ✦</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Special note -->
+    <div class="note-section">
+      <div class="note-card">
+        <div class="note-quote-mark">"</div>
+        <div class="note-quote-mark close">"</div>
+        <p class="note-text">
+          This is for the teacher who always looks out for her kids in this day and age when people are seeing education as a field to make money.
+          She is the one who works with full dedication and emotions, the one who always puts her duty as a teacher first before herself.
+          She cares for her kids like their own mother, teaches them with everything she has got, and always looks at them with love.
+          She never judges them through their marks or family.
+          <br><br>
+          I think she is what we call a real teacher, and the one who taught me that teacher is not a title — it's an emotion which builds the foundation for a kid's future.
+          <br><br>
+          This is for the one and only <strong>Shivani Singh</strong>.
+        </p>
+        <div class="note-signature">
+          <span class="note-signature-line"></span>
+          <span>With love and gratitude</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end teacher-content -->
+</div><!-- end teacherPage -->
+
+<script>
+// ===== STARS =====
+const starsEl=document.getElementById('stars');
+for(let i=0;i<120;i++){
+  const s=document.createElement('div');s.className='star';
+  const sz=Math.random()*2.5+0.5;
+  s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*5}s`;
+  starsEl.appendChild(s);
+}
+// ===== BOUQUET PETALS =====
+const petalsEl=document.getElementById('petals');
+const petalColors=['#ff6b9d','#ffd700','#ff4477','#ffb347','#ff80b0','#e91e63','#dc143c'];
+for(let i=0;i<22;i++){
+  const p=document.createElement('div');p.className='petal-fall';
+  const c=petalColors[Math.floor(Math.random()*petalColors.length)];
+  p.style.cssText=`background:${c};left:${Math.random()*100}%;--pd:${6+Math.random()*8}s;--pdelay:${Math.random()*12}s;opacity:0`;
+  petalsEl.appendChild(p);
+}
+
+// ===== CANVAS =====
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height;
+const startTime=performance.now();
+const DURATION=3400;
+
+function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
+function easeOutBack(x){const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);}
+function easeOutElastic(x){if(x===0||x===1)return x;return Math.pow(2,-10*x)*Math.sin((x*10-0.75)*(2*Math.PI)/3)+1;}
+
+function drawStem(x1,y1,x2,y2,cpx,cpy,t,w,col){
+  ctx.save();const steps=100;ctx.beginPath();
+  for(let i=0;i<=Math.round(steps*t);i++){
+    const s=i/steps;
+    const bx=(1-s)*(1-s)*x1+2*(1-s)*s*cpx+s*s*x2;
+    const by=(1-s)*(1-s)*y1+2*(1-s)*s*cpy+s*s*y2;
+    i===0?ctx.moveTo(bx,by):ctx.lineTo(bx,by);
+  }
+  ctx.strokeStyle=col||'#2d7a2d';ctx.lineWidth=w||5;ctx.lineCap='round';ctx.stroke();ctx.restore();
+}
+
+function drawLeaf(x,y,angle,len,c1,c2,alpha){
+  if(alpha<=0)return;
+  ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);ctx.rotate(angle);
+  const g=ctx.createLinearGradient(0,0,len,0);g.addColorStop(0,c1);g.addColorStop(1,c2);
+  ctx.beginPath();ctx.moveTo(0,0);
+  ctx.bezierCurveTo(len*0.3,-len*0.22,len*0.7,-len*0.22,len,0);
+  ctx.bezierCurveTo(len*0.7,len*0.22,len*0.3,len*0.22,0,0);
+  ctx.fillStyle=g;ctx.fill();ctx.strokeStyle='#1a5c1a';ctx.lineWidth=0.7;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(2,0);ctx.lineTo(len-4,0);
+  ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=0.9;ctx.stroke();
+  ctx.restore();
+}
+
+function drawHibiscus(cx,cy,size,bloom,alpha){
+  if(alpha<=0)return;
+  ctx.save();ctx.globalAlpha=alpha;ctx.translate(cx,cy);ctx.scale(bloom,bloom);
+  for(let i=0;i<5;i++){
+    ctx.save();ctx.rotate((i/5)*Math.PI*2-Math.PI/2);
+    const g=ctx.createRadialGradient(0,-size*0.1,2,0,-size*0.5,size);
+    g.addColorStop(0,'#ff85c0');g.addColorStop(0.3,'#e91e7a');
+    g.addColorStop(0.7,'#c2185b');g.addColorStop(1,'#880e4f');
+    ctx.beginPath();ctx.moveTo(0,0);
+    ctx.bezierCurveTo(-size*0.35,-size*0.3,-size*0.4,-size*0.7,-size*0.15,-size*0.95);
+    ctx.bezierCurveTo(-size*0.05,-size*1.05,0,-size*1.1,0,-size*1.0);
+    ctx.bezierCurveTo(0,-size*1.1,size*0.05,-size*1.05,size*0.15,-size*0.95);
+    ctx.bezierCurveTo(size*0.4,-size*0.7,size*0.35,-size*0.3,0,0);
+    ctx.fillStyle=g;ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,-size*0.05);ctx.lineTo(0,-size*0.92);
+    ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=1;ctx.stroke();
+    ctx.restore();
+  }
+  const tubeH=size*0.85;
+  const tg=ctx.createLinearGradient(-3,0,3,0);
+  tg.addColorStop(0,'#ff8f00');tg.addColorStop(0.5,'#ffe082');tg.addColorStop(1,'#ff6f00');
+  ctx.beginPath();ctx.roundRect(-3,-tubeH,6,tubeH,3);ctx.fillStyle=tg;ctx.fill();
+  for(let a=0;a<8;a++){
+    const ax=Math.cos((a/8)*Math.PI*2)*size*0.14,ay=-tubeH+Math.sin((a/8)*Math.PI*2)*size*0.14;
+    ctx.beginPath();ctx.arc(ax,ay,size*0.05,0,Math.PI*2);ctx.fillStyle='#fff176';ctx.fill();
+  }
+  ctx.beginPath();ctx.arc(0,-tubeH,size*0.07,0,Math.PI*2);ctx.fillStyle='#ffe57a';ctx.fill();
+  ctx.restore();
+}
+
+function drawSunflower(cx,cy,size,bloom,alpha){
+  if(alpha<=0)return;
+  ctx.save();ctx.globalAlpha=alpha;ctx.translate(cx,cy);ctx.scale(bloom,bloom);
+  const pLen=size*0.85,pW=size*0.19;
+  for(let i=0;i<20;i++){
+    ctx.save();ctx.rotate((i/20)*Math.PI*2);
+    const g=ctx.createLinearGradient(0,-size*0.2,0,-pLen);
+    g.addColorStop(0,'#e65100');g.addColorStop(0.3,'#ff8f00');
+    g.addColorStop(0.65,'#ffc107');g.addColorStop(1,'#fff176');
+    ctx.beginPath();ctx.moveTo(0,-size*0.2);
+    ctx.bezierCurveTo(-pW,-size*0.35,-pW,-pLen*0.8,-size*0.04,-pLen);
+    ctx.bezierCurveTo(0,-pLen*1.05,0,-pLen*1.05,size*0.04,-pLen);
+    ctx.bezierCurveTo(pW,-pLen*0.8,pW,-size*0.35,0,-size*0.2);
+    ctx.fillStyle=g;ctx.fill();ctx.restore();
+  }
+  for(let i=0;i<12;i++){
+    ctx.save();ctx.rotate(((i+0.5)/12)*Math.PI*2);
+    const g2=ctx.createLinearGradient(0,-size*0.18,0,-size*0.65);
+    g2.addColorStop(0,'#bf360c');g2.addColorStop(0.5,'#e65100');g2.addColorStop(1,'#ffb300');
+    ctx.beginPath();ctx.moveTo(0,-size*0.18);
+    ctx.bezierCurveTo(-pW*0.7,-size*0.3,-pW*0.7,-size*0.6,0,-size*0.65);
+    ctx.bezierCurveTo(pW*0.7,-size*0.6,pW*0.7,-size*0.3,0,-size*0.18);
+    ctx.fillStyle=g2;ctx.fill();ctx.restore();
+  }
+  const dR=size*0.38;
+  const dg=ctx.createRadialGradient(-dR*0.2,-dR*0.2,2,0,0,dR);
+  dg.addColorStop(0,'#5d3a1a');dg.addColorStop(0.5,'#3e2005');dg.addColorStop(1,'#1a0800');
+  ctx.beginPath();ctx.arc(0,0,dR,0,Math.PI*2);ctx.fillStyle=dg;ctx.fill();
+  ctx.strokeStyle='#2a1200';ctx.lineWidth=1.5;ctx.stroke();
+  const phi=137.508*(Math.PI/180);
+  for(let n=0;n<180;n++){
+    const r=Math.sqrt(n/180)*dR*0.92,theta=n*phi;
+    const sx=r*Math.cos(theta),sy=r*Math.sin(theta),sr=Math.max(1.4,2.8-r/dR*1.8);
+    ctx.beginPath();ctx.arc(sx,sy,sr,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${50+Math.round((n%2)*35)},${15+Math.round((n%2)*12)},0,0.95)`;ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawRose(cx,cy,size,bloom,alpha){
+  if(alpha<=0)return;
+  ctx.save();ctx.globalAlpha=alpha;ctx.translate(cx,cy);ctx.scale(bloom,bloom);
+  const C={deepest:'#3d0010',dark:'#7a0028',mid:'#b8003c',bright:'#e8265e',blush:'#f57498',softest:'#ffd6e0',petal_edge:'rgba(255,180,200,0.28)'};
+  const S=size;
+  function rosePetal(baseCx,baseCy,tipX,tipY,hw,dark,lite,edgeLite){
+    const dx=tipX-baseCx,dy=tipY-baseCy,len=Math.sqrt(dx*dx+dy*dy),nx=dx/len,ny=dy/len,px=-ny,py=nx;
+    const m1x=baseCx+nx*len*0.25+px*hw,m1y=baseCy+ny*len*0.25+py*hw;
+    const m2x=baseCx+nx*len*0.72+px*hw*0.6,m2y=baseCy+ny*len*0.72+py*hw*0.6;
+    const m3x=baseCx+nx*len*0.25-px*hw,m3y=baseCy+ny*len*0.25-py*hw;
+    const m4x=baseCx+nx*len*0.72-px*hw*0.6,m4y=baseCy+ny*len*0.72-py*hw*0.6;
+    const g=ctx.createRadialGradient(baseCx+nx*len*0.2,baseCy+ny*len*0.2,hw*0.1,baseCx+nx*len*0.5,baseCy+ny*len*0.5,len*0.8);
+    g.addColorStop(0,lite);g.addColorStop(0.4,dark);g.addColorStop(1,dark);
+    ctx.beginPath();ctx.moveTo(baseCx,baseCy);
+    ctx.bezierCurveTo(m1x,m1y,m2x,m2y,tipX,tipY);
+    ctx.bezierCurveTo(m4x,m4y,m3x,m3y,baseCx,baseCy);
+    ctx.fillStyle=g;ctx.fill();
+    ctx.beginPath();ctx.moveTo(baseCx+px*hw*0.3,baseCy+py*hw*0.3);
+    ctx.bezierCurveTo(m1x+px*hw*0.1,m1y+py*hw*0.1,m2x,m2y,tipX,tipY);
+    ctx.strokeStyle=edgeLite||C.petal_edge;ctx.lineWidth=1.0;ctx.stroke();
+  }
+  for(let i=0;i<5;i++){
+    const a=(i/5)*Math.PI*2+0.2;
+    const bx=Math.cos(a)*S*0.3,by=Math.sin(a)*S*0.3+S*0.15;
+    const tx=Math.cos(a)*S*0.75,ty=Math.sin(a)*S*0.75+S*0.15;
+    const sg=ctx.createLinearGradient(bx,by,tx,ty);sg.addColorStop(0,'#1a5720');sg.addColorStop(1,'#4caf50');
+    ctx.beginPath();ctx.moveTo(bx,by);
+    const ppx=-(ty-by)/S*0.18*S,ppy=(tx-bx)/S*0.18*S;
+    ctx.bezierCurveTo(bx+ppx,by+ppy,tx+ppx*0.3,ty+ppy*0.3,tx,ty);
+    ctx.bezierCurveTo(tx-ppx*0.3,ty-ppy*0.3,bx-ppx,by-ppy,bx,by);
+    ctx.fillStyle=sg;ctx.fill();
+  }
+  for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2-Math.PI/2;rosePetal(Math.cos(a)*S*0.12,Math.sin(a)*S*0.12,Math.cos(a)*S*0.96,Math.sin(a)*S*0.96,S*0.42,C.dark,C.blush);}
+  for(let i=0;i<6;i++){const a=((i+0.5)/6)*Math.PI*2-Math.PI/2;rosePetal(Math.cos(a)*S*0.10,Math.sin(a)*S*0.10,Math.cos(a)*S*0.78,Math.sin(a)*S*0.78,S*0.35,C.mid,C.softest);}
+  for(let i=0;i<5;i++){const a=(i/5)*Math.PI*2+0.3;rosePetal(Math.cos(a)*S*0.08,Math.sin(a)*S*0.08,Math.cos(a)*S*0.60,Math.sin(a)*S*0.60,S*0.27,C.mid,C.blush);}
+  for(let i=0;i<5;i++){const a=((i+0.4)/5)*Math.PI*2;rosePetal(Math.cos(a)*S*0.05,Math.sin(a)*S*0.05,Math.cos(a)*S*0.42,Math.sin(a)*S*0.42,S*0.20,C.bright,C.softest);}
+  for(let i=0;i<4;i++){const a=(i/4)*Math.PI*2+0.7;rosePetal(Math.cos(a)*S*0.03,Math.sin(a)*S*0.03,Math.cos(a)*S*0.27,Math.sin(a)*S*0.27,S*0.14,C.bright,C.softest,'rgba(255,220,230,0.4)');}
+  for(let i=0;i<3;i++){const a=(i/3)*Math.PI*2+1.2;rosePetal(Math.cos(a)*S*0.02,Math.sin(a)*S*0.02,Math.cos(a)*S*0.16,Math.sin(a)*S*0.16,S*0.09,C.blush,C.softest,'rgba(255,230,235,0.5)');}
+  for(let i=0;i<2;i++){
+    const a=i*Math.PI+0.5;ctx.save();ctx.translate(Math.cos(a)*S*0.06,Math.sin(a)*S*0.06);ctx.rotate(a);
+    const bg2=ctx.createLinearGradient(0,-S*0.14,0,S*0.06);
+    bg2.addColorStop(0,C.softest);bg2.addColorStop(0.5,C.blush);bg2.addColorStop(1,C.bright);
+    ctx.beginPath();ctx.moveTo(0,S*0.07);ctx.bezierCurveTo(-S*0.065,S*0.02,-S*0.07,-S*0.08,-S*0.01,-S*0.14);
+    ctx.bezierCurveTo(S*0.01,-S*0.17,S*0.02,-S*0.17,S*0.05,-S*0.13);ctx.bezierCurveTo(S*0.07,-S*0.07,S*0.065,S*0.02,0,S*0.07);
+    ctx.fillStyle=bg2;ctx.fill();ctx.restore();
+  }
+  const cg=ctx.createRadialGradient(-S*0.025,-S*0.04,0,-S*0.01,-S*0.02,S*0.075);
+  cg.addColorStop(0,'rgba(255,255,255,0.92)');cg.addColorStop(0.4,'rgba(255,220,230,0.5)');cg.addColorStop(1,'rgba(255,150,180,0)');
+  ctx.beginPath();ctx.ellipse(-S*0.025,-S*0.04,S*0.055,S*0.04,-0.3,0,Math.PI*2);ctx.fillStyle=cg;ctx.fill();
+  ctx.restore();
+}
+
+function drawWrap(t,alpha){
+  if(t<=0||alpha<=0)return;
+  ctx.save();ctx.globalAlpha=alpha;
+  const cx=W/2,topY=458,botY=588;
+  const g=ctx.createLinearGradient(cx-90,topY,cx+90,topY);
+  g.addColorStop(0,'#fff9e6');g.addColorStop(0.3,'#fffde7');g.addColorStop(0.7,'#fff9c4');g.addColorStop(1,'#f9a825');
+  ctx.beginPath();ctx.moveTo(cx-88,topY);ctx.lineTo(cx+88,topY);ctx.lineTo(cx+56,botY);ctx.lineTo(cx-56,botY);ctx.closePath();
+  ctx.fillStyle=g;ctx.fill();ctx.strokeStyle='#f9a825';ctx.lineWidth=1.5;ctx.stroke();
+  const sg=ctx.createLinearGradient(cx-88,0,cx+88,0);
+  sg.addColorStop(0,'rgba(180,100,0,0.14)');sg.addColorStop(0.5,'rgba(255,255,255,0)');sg.addColorStop(1,'rgba(180,100,0,0.14)');
+  ctx.fillStyle=sg;ctx.beginPath();ctx.moveTo(cx-88,topY);ctx.lineTo(cx+88,topY);ctx.lineTo(cx+56,botY);ctx.lineTo(cx-56,botY);ctx.closePath();ctx.fill();
+  const rb=ctx.createRadialGradient(0,0,2,0,0,30);rb.addColorStop(0,'#ff80ab');rb.addColorStop(1,'#c62056');
+  ctx.save();ctx.translate(cx-18,topY+16);ctx.rotate(-0.38);ctx.beginPath();ctx.ellipse(0,0,28,12,0,0,Math.PI*2);ctx.fillStyle=rb;ctx.fill();ctx.restore();
+  ctx.save();ctx.translate(cx+18,topY+16);ctx.rotate(0.38);ctx.beginPath();ctx.ellipse(0,0,28,12,0,0,Math.PI*2);ctx.fillStyle=rb;ctx.fill();ctx.restore();
+  const kg=ctx.createRadialGradient(cx-3,topY+14,1,cx,topY+16,10);kg.addColorStop(0,'#ff80ab');kg.addColorStop(1,'#c2185b');
+  ctx.beginPath();ctx.ellipse(cx,topY+16,10,9,0,0,Math.PI*2);ctx.fillStyle=kg;ctx.fill();ctx.restore();
+}
+
+function glow(x,y,r,col){
+  const g=ctx.createRadialGradient(x,y,3,x,y,r);g.addColorStop(0,col);g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);
+}
+
+const ROSE_X=W/2,ROSE_Y=195,ROSE_SZ=88;
+const HIB_X=152,HIB_Y=300,HIB_SZ=52;
+const SUN_X=548,SUN_Y=282,SUN_SZ=60;
+
+let bloomDone=false;
+function drawFrame(t){
+  ctx.clearRect(0,0,W,H);
+  const bg=ctx.createRadialGradient(W/2,H*0.5,20,W/2,H*0.5,360);
+  bg.addColorStop(0,'rgba(80,20,40,0.12)');bg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  const st=clamp(t*3.8,0,1);
+  drawStem(W/2,565,ROSE_X,ROSE_Y+ROSE_SZ*0.72,W/2+6,385,st,9,'#267326');
+  drawStem(W/2,560,HIB_X,HIB_Y+HIB_SZ*0.6,188,442,clamp((t-0.02)*3.8,0,1),6,'#2e7a2e');
+  drawStem(W/2,560,SUN_X,SUN_Y+SUN_SZ*0.6,512,442,clamp((t-0.04)*3.8,0,1),6,'#2e7a2e');
+  const lt=easeOutBack(clamp((t-0.12)*4.5,0,1));
+  drawLeaf(198,425,-0.75,50,'#4caf50','#1b5e20',lt);drawLeaf(176,390,-0.48,42,'#388e3c','#1b5e20',lt*0.9);
+  drawLeaf(246,458,0.55,38,'#66bb6a','#2e7d32',lt*0.85);drawLeaf(285,458,-1.05,48,'#4caf50','#1b5e20',lt*0.95);
+  drawLeaf(355,458,1.05,48,'#43a047','#1b5e20',lt*0.95);drawLeaf(502,420,0.75,50,'#4caf50','#1b5e20',lt);
+  drawLeaf(524,388,0.5,42,'#388e3c','#1b5e20',lt*0.9);drawLeaf(454,458,-0.55,38,'#66bb6a','#2e7d32',lt*0.85);
+  drawWrap(easeOutBack(clamp((t-0.08)*3.5,0,1)),clamp((t-0.08)*5,0,1));
+  const hB=easeOutElastic(clamp((t-0.28)*3.2,0,1)),hA=clamp((t-0.28)*6,0,1);
+  if(hA>0)glow(HIB_X,HIB_Y,85,'rgba(233,30,122,0.10)');
+  drawHibiscus(HIB_X,HIB_Y,HIB_SZ,hB,hA);
+  const sB=easeOutElastic(clamp((t-0.33)*3.2,0,1)),sA=clamp((t-0.33)*6,0,1);
+  if(sA>0)glow(SUN_X,SUN_Y,95,'rgba(255,180,0,0.13)');
+  drawSunflower(SUN_X,SUN_Y,SUN_SZ,sB,sA);
+  const rB=easeOutElastic(clamp((t-0.20)*3.0,0,1)),rA=clamp((t-0.20)*5,0,1);
+  if(rA>0){glow(ROSE_X,ROSE_Y,140,'rgba(184,0,60,0.18)');glow(ROSE_X,ROSE_Y,72,'rgba(255,80,130,0.15)');}
+  drawRose(ROSE_X,ROSE_Y,ROSE_SZ,rB,rA);
+}
+
+function animate(ts){
+  const t=clamp((ts-startTime)/DURATION,0,1);
+  drawFrame(t);
+  if(t<1)requestAnimationFrame(animate);
+  else{bloomDone=true;requestAnimationFrame(idleLoop);}
+}
+
+let idleT=0;
+function idleLoop(ts){
+  idleT+=0.007;
+  ctx.clearRect(0,0,W,H);
+  const bg=ctx.createRadialGradient(W/2,H*0.5,20,W/2,H*0.5,360);
+  bg.addColorStop(0,'rgba(80,20,40,0.12)');bg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  drawStem(W/2,565,ROSE_X,ROSE_Y+ROSE_SZ*0.72,W/2+6,385,1,9,'#267326');
+  drawStem(W/2,560,HIB_X,HIB_Y+HIB_SZ*0.6,188,442,1,6,'#2e7a2e');
+  drawStem(W/2,560,SUN_X,SUN_Y+SUN_SZ*0.6,512,442,1,6,'#2e7a2e');
+  drawLeaf(198,425,-0.75,50,'#4caf50','#1b5e20',1);drawLeaf(176,390,-0.48,42,'#388e3c','#1b5e20',0.9);
+  drawLeaf(246,458,0.55,38,'#66bb6a','#2e7d32',0.85);drawLeaf(285,458,-1.05,48,'#4caf50','#1b5e20',0.95);
+  drawLeaf(355,458,1.05,48,'#43a047','#1b5e20',0.95);drawLeaf(502,420,0.75,50,'#4caf50','#1b5e20',1);
+  drawLeaf(524,388,0.5,42,'#388e3c','#1b5e20',0.9);drawLeaf(454,458,-0.55,38,'#66bb6a','#2e7d32',0.85);
+  drawWrap(1,1);
+  const hS=Math.sin(idleT*0.88)*3.5,sS=Math.sin(idleT*1.05+1.2)*3,rS=Math.sin(idleT*0.72+2.5)*2;
+  ctx.save();ctx.translate(HIB_X+hS,HIB_Y);ctx.rotate(hS*0.013);ctx.translate(-HIB_X,-HIB_Y);
+  glow(HIB_X,HIB_Y,85,'rgba(233,30,122,0.09)');drawHibiscus(HIB_X,HIB_Y,HIB_SZ,1,1);ctx.restore();
+  ctx.save();ctx.translate(SUN_X+sS,SUN_Y);ctx.rotate(sS*0.009);ctx.translate(-SUN_X,-SUN_Y);
+  glow(SUN_X,SUN_Y,95,'rgba(255,180,0,0.11)');drawSunflower(SUN_X,SUN_Y,SUN_SZ,1,1);ctx.restore();
+  ctx.save();ctx.translate(ROSE_X+rS,ROSE_Y);ctx.rotate(rS*0.007);ctx.translate(-ROSE_X,-ROSE_Y);
+  glow(ROSE_X,ROSE_Y,140,'rgba(184,0,60,0.16)');glow(ROSE_X,ROSE_Y,68,'rgba(255,80,130,0.12)');
+  drawRose(ROSE_X,ROSE_Y,ROSE_SZ,1,1);ctx.restore();
+
+  // Hover glow on hibiscus
+  if(isHoveringHib){glow(HIB_X,HIB_Y,100,'rgba(255,80,160,0.22)');}
+  // Hover glow on sunflower
+  if(isHoveringSun){glow(SUN_X,SUN_Y,105,'rgba(255,220,0,0.28)');}
+  // Hover glow on rose
+  if(isHoveringRose){glow(ROSE_X,ROSE_Y,110,'rgba(220,30,90,0.30)');}
+
+  requestAnimationFrame(idleLoop);
+}
+
+// ===== DAUGHTER PAGE =====
+function openDaughterPage(){
+  // Build sunrays
+  const sr=document.getElementById('sunrays');
+  if(!sr.children.length){
+    for(let i=0;i<24;i++){
+      const r=document.createElement('div');r.className='sunray';
+      r.style.transform=`rotate(${i*15}deg)`;sr.appendChild(r);
+    }
+  }
+  const page=document.getElementById('daughterPage');
+  page.classList.add('visible');page.scrollTop=0;
+  spawnDaughterEffects();
+}
+function closeDaughterPage(){
+  document.getElementById('daughterPage').classList.remove('visible');
+  clearDaughterEffects();
+}
+const spawnedDEls=[];
+function spawnDaughterEffects(){
+  clearDaughterEffects();
+  const sunEmoji=['🌻','⭐','✨','💛','🌟','💫','🌼','☀️'];
+  for(let i=0;i<20;i++){
+    const h=document.createElement('div');h.className='sparkle';
+    h.textContent=sunEmoji[Math.floor(Math.random()*sunEmoji.length)];
+    const sz=13+Math.random()*18;
+    h.style.cssText=`left:${Math.random()*100}%;bottom:${Math.random()*15}%;--spks:${sz}px;--spkd:${5+Math.random()*7}s;--spkdel:${Math.random()*10}s;font-size:${sz}px;`;
+    document.getElementById('daughterPage').appendChild(h);
+    spawnedDEls.push(h);
+  }
+  // Sunflower petal SVGs
+  for(let i=0;i<16;i++){
+    const p=document.createElement('div');p.className='sun-petal';
+    const sz=7+Math.random()*12;const col=['#ffc107','#ff8f00','#ffeb3b','#fff176'][Math.floor(Math.random()*4)];
+    p.innerHTML=`<svg width="${sz*4}" height="${sz*4}" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg"><g transform="translate(25,25)"><ellipse cx="0" cy="-12" rx="5" ry="14" fill="${col}" opacity="0.88" transform="rotate(0)"/><ellipse cx="0" cy="-12" rx="5" ry="14" fill="${col}" opacity="0.88" transform="rotate(45)"/><ellipse cx="0" cy="-12" rx="5" ry="14" fill="${col}" opacity="0.88" transform="rotate(90)"/><ellipse cx="0" cy="-12" rx="5" ry="14" fill="${col}" opacity="0.88" transform="rotate(135)"/><ellipse cx="0" cy="-12" rx="5" ry="14" fill="${col}" opacity="0.88" transform="rotate(180)"/><ellipse cx="0" cy="-12" rx="5" ry="14" fill="${col}" opacity="0.88" transform="rotate(225)"/><ellipse cx="0" cy="-12" rx="5" ry="14" fill="${col}" opacity="0.88" transform="rotate(270)"/><ellipse cx="0" cy="-12" rx="5" ry="14" fill="${col}" opacity="0.88" transform="rotate(315)"/><circle cx="0" cy="0" r="6" fill="#3e2005"/></g></svg>`;
+    p.style.cssText=`left:${Math.random()*100}%;top:-5%;--spd:${8+Math.random()*8}s;--spdel:${Math.random()*14}s;`;
+    document.getElementById('daughterPage').appendChild(p);
+    spawnedDEls.push(p);
+  }
+}
+function clearDaughterEffects(){spawnedDEls.forEach(e=>e.remove());spawnedDEls.length=0;}
+
+// ===== CLICK / HOVER DETECTION =====
+let isHoveringHib=false;
+let isHoveringRose=false;
+const HIB_HIT_R=70;
+const ROSE_HIT_R=78;
+
+function canvasPoint(e){
+  const rect=canvas.getBoundingClientRect();
+  const scaleX=W/rect.width,scaleY=H/rect.height;
+  return {x:(e.clientX-rect.left)*scaleX,y:(e.clientY-rect.top)*scaleY};
+}
+
+// ===== SUNFLOWER HOVER & CLICK =====
+let isHoveringSun=false;
+const SUN_HIT_R=75;
+
+canvas.addEventListener('mousemove',e=>{
+  if(!bloomDone)return;
+  const {x,y}=canvasPoint(e);
+  const dh=Math.sqrt((x-HIB_X)**2+(y-HIB_Y)**2);
+  const ds=Math.sqrt((x-SUN_X)**2+(y-SUN_Y)**2);
+  const dr=Math.sqrt((x-ROSE_X)**2+(y-ROSE_Y)**2);
+  isHoveringHib=dh<HIB_HIT_R;
+  isHoveringSun=ds<SUN_HIT_R;
+  isHoveringRose=dr<ROSE_HIT_R;
+  canvas.style.cursor=(isHoveringHib||isHoveringSun||isHoveringRose)?'pointer':'default';
+});
+
+canvas.addEventListener('click',e=>{
+  if(!bloomDone)return;
+  const {x,y}=canvasPoint(e);
+  const dh=Math.sqrt((x-HIB_X)**2+(y-HIB_Y)**2);
+  const ds=Math.sqrt((x-SUN_X)**2+(y-SUN_Y)**2);
+  const dr=Math.sqrt((x-ROSE_X)**2+(y-ROSE_Y)**2);
+  if(dh<HIB_HIT_R) openTeacherPage();
+  else if(ds<SUN_HIT_R) openDaughterPage();
+  else if(dr<ROSE_HIT_R) openLadyPage();
+});
+
+// ===== LADY / ROSE PAGE =====
+function openLadyPage(){
+  const page=document.getElementById('ladyPage');
+  page.classList.add('visible');
+  page.scrollTop=0;
+  spawnLadyEffects();
+}
+function closeLadyPage(){
+  document.getElementById('ladyPage').classList.remove('visible');
+  clearLadyEffects();
+}
+const spawnedLEls=[];
+function spawnLadyEffects(){
+  clearLadyEffects();
+  const page=document.getElementById('ladyPage');
+  // Floating glitter emoji
+  const glitterSet=['🌹','💖','✨','💕','🌸','💗','❤️','💫','🦋','💎'];
+  for(let i=0;i<22;i++){
+    const g=document.createElement('div');g.className='lady-glitter';
+    g.textContent=glitterSet[Math.floor(Math.random()*glitterSet.length)];
+    const sz=12+Math.random()*20;
+    g.style.cssText=`left:${Math.random()*100}%;bottom:${Math.random()*18}%;--lgs:${sz}px;--lgd:${6+Math.random()*7}s;--lgdel:${Math.random()*11}s;font-size:${sz}px;`;
+    page.appendChild(g);spawnedLEls.push(g);
+  }
+  // Rose petal SVGs falling from top
+  const roseColors=['#e91e63','#c2185b','#f06292','#ff80ab','#ad1457','#ffd6e0'];
+  for(let i=0;i<20;i++){
+    const p=document.createElement('div');p.className='rose-petal-fall';
+    const sz=8+Math.random()*13;
+    const c1=roseColors[Math.floor(Math.random()*roseColors.length)];
+    const c2=roseColors[Math.floor(Math.random()*roseColors.length)];
+    // Draw a single rose petal SVG
+    p.innerHTML=`<svg width="${sz*4}" height="${sz*5}" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="pp${i}" cx="35%" cy="25%" r="70%"><stop offset="0%" stop-color="${c2}"/><stop offset="100%" stop-color="${c1}"/></radialGradient></defs>
+      <path d="M20,48 C5,35 2,20 8,10 C12,3 18,0 20,2 C22,0 28,3 32,10 C38,20 35,35 20,48Z" fill="url(#pp${i})" opacity="0.88"/>
+      <path d="M20,48 C12,34 10,22 14,13" stroke="rgba(255,255,255,0.2)" stroke-width="1" fill="none"/>
+    </svg>`;
+    p.style.cssText=`left:${Math.random()*100}%;top:-8%;--rpd:${9+Math.random()*8}s;--rpdel:${Math.random()*15}s;`;
+    page.appendChild(p);spawnedLEls.push(p);
+  }
+  // Ambient glowing particles
+  for(let i=0;i<14;i++){
+    const dot=document.createElement('div');dot.className='lady-particle';
+    const sz=3+Math.random()*5;
+    const cols=['rgba(233,30,99,0.6)','rgba(255,128,171,0.5)','rgba(194,24,91,0.5)','rgba(255,210,220,0.4)'];
+    const c=cols[Math.floor(Math.random()*cols.length)];
+    dot.style.cssText=`width:${sz}px;height:${sz}px;background:${c};left:${Math.random()*100}%;top:${Math.random()*100}%;--pp:${2+Math.random()*4}s;--ppdel:${Math.random()*5}s;box-shadow:0 0 ${sz*3}px ${c};`;
+    page.appendChild(dot);spawnedLEls.push(dot);
+  }
+}
+function clearLadyEffects(){spawnedLEls.forEach(e=>e.remove());spawnedLEls.length=0;}
+
+// ===== SHIVANI PAGE =====
+function shivaniBtnClick(){
+  const btn=document.querySelector('.shivani-btn');
+  btn.style.transition='box-shadow 0.1s ease';
+  btn.style.boxShadow='0 0 0 8px rgba(255,128,171,.6),0 0 100px rgba(233,30,99,.95),0 0 160px rgba(180,0,60,.6)';
+  setTimeout(()=>{btn.style.boxShadow='';openShivaniPage();},360);
+}
+
+let spCanvasRunning=false;
+function startShivaniCanvas(){
+  const c=document.getElementById('spCanvas');
+  if(!c||spCanvasRunning)return;
+  spCanvasRunning=true;
+  const ctx=c.getContext('2d');
+  const stars=Array.from({length:200},()=>({
+    x:Math.random(),y:Math.random(),
+    r:Math.random()*1.8+.3,
+    a:Math.random(),da:(Math.random()-.5)*.007+.002
+  }));
+  const particles=Array.from({length:55},()=>({
+    x:Math.random(),y:Math.random(),
+    vx:(Math.random()-.5)*.0003,vy:-(Math.random()*.0004+.0001),
+    r:Math.random()*3+1,
+    col:[`rgba(233,30,99,`,`rgba(194,24,91,`,`rgba(255,128,171,`,`rgba(255,77,148,`][Math.floor(Math.random()*4)],
+    a:Math.random()*.5+.1,life:Math.random()
+  }));
+  const blobs=[
+    {x:.18,y:.18,r:.38,col:'rgba(120,0,50,',a:.22,dx:.0003,dy:.0002,t:0},
+    {x:.82,y:.12,r:.32,col:'rgba(80,0,80,',a:.18,dx:-.0004,dy:.0003,t:1.2},
+    {x:.5,y:.65,r:.42,col:'rgba(160,0,60,',a:.16,dx:.0002,dy:-.0003,t:2.1},
+    {x:.1,y:.82,r:.28,col:'rgba(60,0,40,',a:.14,dx:.0005,dy:.0001,t:3},
+    {x:.9,y:.78,r:.3,col:'rgba(100,0,70,',a:.16,dx:-.0003,dy:-.0002,t:4},
+  ];
+  let t=0;
+  function frame(){
+    if(!spCanvasRunning)return;
+    t+=.016;
+    const W=window.innerWidth,H=window.innerHeight;
+    c.width=W;c.height=H;
+    // BG
+    const bg=ctx.createLinearGradient(0,0,W,H);
+    bg.addColorStop(0,'#08000f');bg.addColorStop(.5,'#12000e');bg.addColorStop(1,'#0a0015');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    // Aurora
+    blobs.forEach(b=>{
+      const bx=(b.x+Math.sin(t*.3+b.t)*.06)*W;
+      const by=(b.y+Math.cos(t*.25+b.t)*.05)*H;
+      const br=b.r*Math.min(W,H);
+      const g=ctx.createRadialGradient(bx,by,8,bx,by,br);
+      g.addColorStop(0,b.col+(b.a+Math.sin(t*.5)*.04)+')');
+      g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    });
+    // Stars
+    stars.forEach(s=>{
+      s.a+=s.da;if(s.a>1){s.a=1;s.da=-Math.abs(s.da);}if(s.a<0){s.a=0;s.da=Math.abs(s.da);}
+      ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,${180+Math.floor(s.a*75)},${200+Math.floor(s.a*55)},${s.a*.85})`;ctx.fill();
+    });
+    // Particles
+    particles.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;p.life+=.003;
+      if(p.y<-.02||p.life>1){p.x=Math.random();p.y=1.02;p.life=0;p.vy=-(Math.random()*.0004+.0001);p.vx=(Math.random()-.5)*.0003;}
+      const pa=Math.sin(p.life*Math.PI)*.6;
+      ctx.beginPath();ctx.arc(p.x*W,p.y*H,p.r,0,Math.PI*2);
+      ctx.fillStyle=p.col+pa+')';ctx.fill();
+    });
+    // Vignette
+    const vig=ctx.createRadialGradient(W/2,H/2,H*.18,W/2,H/2,H*.82);
+    vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,.52)');
+    ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+function openShivaniPage(){
+  const page=document.getElementById('shivaniPage');
+  page.classList.add('visible');page.scrollTop=0;
+  startShivaniCanvas();
+  spawnShivaniEffects();
+}
+function closeShivaniPage(){
+  document.getElementById('shivaniPage').classList.remove('visible');
+  spCanvasRunning=false;
+  clearShivaniEffects();
+}
+const spawnedSPEls=[];
+function spawnShivaniEffects(){
+  clearShivaniEffects();
+  const page=document.getElementById('shivaniPage');
+  const hearts=['❤️','💖','💗','💓','💝','💕','🌹','🌸','✨','💫'];
+  for(let i=0;i<30;i++){
+    const h=document.createElement('div');h.className='sp-fheart';
+    const sz=11+Math.random()*24;
+    h.textContent=hearts[Math.floor(Math.random()*hearts.length)];
+    h.style.cssText=`left:${Math.random()*100}%;bottom:${Math.random()*10}%;font-size:${sz}px;--sfht:${6+Math.random()*8}s;--sfhd:${Math.random()*13}s;`;
+    page.appendChild(h);spawnedSPEls.push(h);
+  }
+  const cols=['#e91e63','#c2185b','#f06292','#ff80ab','#ad1457','#ffd6e0','#ff4081','#f48fb1'];
+  for(let i=0;i<25;i++){
+    const p=document.createElement('div');p.className='sp-petal';
+    const sz=7+Math.random()*13;
+    const c1=cols[Math.floor(Math.random()*cols.length)];
+    const c2=cols[Math.floor(Math.random()*cols.length)];
+    const dx=(Math.random()-.5)*120,dr=360+Math.random()*360;
+    p.innerHTML=`<svg width="${sz*4}" height="${sz*5}" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="pg${i}" cx="35%" cy="25%" r="72%"><stop offset="0%" stop-color="${c2}"/><stop offset="100%" stop-color="${c1}"/></radialGradient></defs><path d="M20,48 C5,34 2,18 8,9 C12,2 18,0 20,2 C22,0 28,2 32,9 C38,18 35,34 20,48Z" fill="url(#pg${i})" opacity="0.92"/><path d="M20,47 C13,32 11,19 15,11" stroke="rgba(255,255,255,0.24)" stroke-width="1.3" fill="none"/></svg>`;
+    p.style.cssText=`left:${Math.random()*100}%;--spt:${9+Math.random()*9}s;--sptd:${Math.random()*16}s;--spx:${dx}px;--spr:${dr}deg;`;
+    page.appendChild(p);spawnedSPEls.push(p);
+  }
+}
+function clearShivaniEffects(){spawnedSPEls.forEach(e=>e.remove());spawnedSPEls.length=0;}
+
+// ===== TEACHER PAGE LOGIC =====
+function openTeacherPage(){
+  const page=document.getElementById('teacherPage');
+  page.classList.add('visible');
+  page.scrollTop=0;
+  spawnTeacherEffects();
+}
+function closeTeacherPage(){
+  document.getElementById('teacherPage').classList.remove('visible');
+  clearTeacherEffects();
+}
+
+let teacherEffectInterval=null;
+const spawnedEls=[];
+
+function spawnTeacherEffects(){
+  clearTeacherEffects();
+  // Floating hearts
+  const heartEmoji=['❤️','💖','💗','💓','💝','🌺','✨','🌸'];
+  for(let i=0;i<18;i++){
+    const h=document.createElement('div');h.className='heart';
+    h.textContent=heartEmoji[Math.floor(Math.random()*heartEmoji.length)];
+    const sz=14+Math.random()*20;
+    h.style.cssText=`left:${Math.random()*100}%;bottom:${Math.random()*20}%;--hs:${sz}px;--hrd:${6+Math.random()*6}s;--hrdel:${Math.random()*10}s;font-size:${sz}px;`;
+    document.getElementById('teacherPage').appendChild(h);
+    spawnedEls.push(h);
+  }
+  // Hibiscus petals
+  for(let i=0;i<14;i++){
+    const p=document.createElement('div');p.className='hib-petal';
+    const sz=8+Math.random()*14;
+    p.innerHTML=`<svg width="${sz*3}" height="${sz*3}" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g transform="translate(20,20)"><ellipse cx="0" cy="-7" rx="5" ry="10" fill="#e91e7a" opacity="0.85" transform="rotate(0)"/><ellipse cx="0" cy="-7" rx="5" ry="10" fill="#c2185b" opacity="0.85" transform="rotate(72)"/><ellipse cx="0" cy="-7" rx="5" ry="10" fill="#e91e7a" opacity="0.85" transform="rotate(144)"/><ellipse cx="0" cy="-7" rx="5" ry="10" fill="#c2185b" opacity="0.85" transform="rotate(216)"/><ellipse cx="0" cy="-7" rx="5" ry="10" fill="#e91e7a" opacity="0.85" transform="rotate(288)"/></g></svg>`;
+    p.style.cssText=`left:${Math.random()*100}%;top:0%;--hd:${7+Math.random()*7}s;--hdel:${Math.random()*12}s;`;
+    document.getElementById('teacherPage').appendChild(p);
+    spawnedEls.push(p);
+  }
+}
+function clearTeacherEffects(){
+  spawnedEls.forEach(el=>el.remove());
+  spawnedEls.length=0;
+}
+
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
