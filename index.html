@@ -796,7 +796,41 @@ canvas{display:block;border-radius:16px;cursor:default;
 .sp-footer{text-align:center;margin-top:38px;
   opacity:0;animation:spFadeUp 1s ease 1.8s forwards;
   font-size:24px;letter-spacing:14px;}
-</style>
+
+/* ===== RESPONSIVE LAYOUT ===== */
+canvas{max-width:92vw;height:auto;width:min(92vw,700px);}
+.photo-large,.d-photo-large,.l-photo-large{width:clamp(220px,40vw,280px);aspect-ratio:7/8;}
+.photo-small,.d-photo-small,.l-photo-small{width:clamp(160px,30vw,210px);aspect-ratio:21/24;}
+.sp-photo-wrap{width:clamp(240px,70vw,310px);aspect-ratio:31/38;}
+.note-section,.d-note-section,.l-note-section,.sp-note-sec{max-width:92vw;}
+.note-card,.d-note-card,.l-note-card,.sp-note-card{padding:28px 24px;}
+
+@media (max-width:920px){
+  #teacherPage,#daughterPage,#ladyPage,#shivaniPage{padding:24px 14px 50px;}
+  .back-btn,.back-btn-sun,.back-btn-rose,.back-btn-shivani{top:14px;left:14px;padding:8px 16px;font-size:13px;}
+  .photo-pair,.d-photo-pair,.l-photo-pair{gap:18px;}
+  .note-section,.d-note-section,.l-note-section,.sp-note-sec{margin-top:36px;}
+  .sp-content{padding:45px 18px 60px;}
+  .sp-ribbon{font-size:14px;padding:8px 24px;}
+  .sp-note-text{font-size:clamp(15px,3vw,18px);}
+  .sp-footer{letter-spacing:10px;font-size:20px;}
+  .headline-main,.d-headline-main,.l-headline-main{font-size:clamp(28px,8vw,52px);}
+  .d-headline-sub,.l-headline-sub,.headline-sub,.sp-sub{letter-spacing:0.35em;}
+}
+
+@media (max-width:620px){
+  .photo-large,.d-photo-large,.l-photo-large{width:min(75vw,260px);}
+  .photo-small,.d-photo-small,.l-photo-small{width:min(46vw,195px);}
+  .sp-photo-wrap{width:min(80vw,260px);}
+  .sp-note-card{padding:22px 18px 24px;}
+  .sp-qm{font-size:90px;}
+  .sp-sig-row{gap:10px;}
+  .shivani-btn{padding:12px 32px;font-size:16px;letter-spacing:0.16em;}
+  .header-hibiscus svg,.header-sunflower svg,.header-rose-icon svg{width:80px;height:80px;}
+  .sp-crown span{font-size:clamp(14px,4vw,22px);}
+  .l-footer-deco{font-size:18px;letter-spacing:10px;}
+  .back-btn,.back-btn-sun,.back-btn-rose,.back-btn-shivani{padding:7px 14px;}
+}
 </style>
 </head>
 <body>
@@ -1106,10 +1140,7 @@ canvas{display:block;border-radius:16px;cursor:default;
         <div class="sp-orbit sp-orbit-2"></div>
         <div class="sp-orbit sp-orbit-3"></div>
         <div class="sp-frame">
-          <video controls muted playsinline loop style="width:100%;height:100%;object-fit:cover;display:block;">
-            <source src="VID-20251011-WA0013.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
+          <img src="WhatsApp Image 2026-05-17 at 10.53.00.jpeg" alt="Shivani" style="width:100%;height:100%;object-fit:cover;display:block;"/>
         </div>
         <div class="sp-c tl"></div>
         <div class="sp-c tr"></div>
